@@ -28,12 +28,12 @@ public:
      * @param addr The listening address.
      * @param port The TCP port of the listening address.
      */
-	Server(const std::string& addr, uint_t port);
+    Server(const std::string& addr, uint_t port);
 
     /**
      * The destructor.
      */
-	~Server();
+    ~Server();
 
     /**
      * This method performs the server's initialisation.
@@ -48,7 +48,7 @@ public:
      * requests. This method blocks the main thread until the server gets
      * shutdown.
      */
-	void waitConnexion();
+    void waitConnexion();
 
     /**
      * This method authentificates a client. A client has a username and a
@@ -76,23 +76,23 @@ public:
      *
      * @return If the text was sent, `true`, else `false`.
      */
-	bool sendText(Client* client, const std::string& msg);
+    bool sendText(Client* client, const std::string& msg);
 
 private:
     /** The address to listen to. */
-	std::string addr_;
+    std::string addr_;
 
     /** The TCP port to listen to. */
-	uint_t port_;
+    uint_t port_;
 
     /** The listening socket. */
     socket_t socket_;
 
     /** The database of users. */
-	Database db_;
+    Database db_;
 
     /** The list of current client opened. */
-	std::vector<Client*> clients_;
+    std::vector<Client*> clients_;
 
     /** The mutex used to syncronize the database. */
     mutex_t mutex_;

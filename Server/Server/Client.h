@@ -25,12 +25,12 @@ public:
      * @param server The server that the client belongs to.
      * @param socket The socket of the client.
      */
-	Client(Server* server, socket_t socket);
+    Client(Server* server, socket_t socket);
 
     /**
      * The destructor.
      */
-	~Client();
+    ~Client();
 
     /**
      * This method handles the client requests.
@@ -45,7 +45,7 @@ public:
      *
      * @return If the message was sent successfully, 'true', else 'false'.
      */
-	bool sendMessage(void* msg, uint_t size);
+    bool sendMessage(void* msg, uint_t size);
 
     /*************
      * Accessors *
@@ -64,14 +64,14 @@ public:
      *
      * @return The thread ID.
      */
-	tid_t getThreadID() const;
+    tid_t getThreadID() const;
 
     /**
      * This method returns the thread handle.
      *
      * @return The thread handle.
      */
-	thread_t getThread() const;
+    thread_t getThread() const;
 
     struct in_addr* getSocketAddr() const;
 
@@ -82,10 +82,10 @@ private:
     std::string name_;
 
     /** The server it belongs to. */
-	Server* server_;
+    Server* server_;
 
     /* The socket of the client. */
-	socket_t socket_;
+    socket_t socket_;
 
     struct sockaddr addr_;
 
@@ -93,7 +93,7 @@ private:
     tid_t threadID_;
 
     /** The thread of the client. */
-	thread_t thread_;
+    thread_t thread_;
 
     /** The buffer for reading data. */
     struct msg_buffer buffer_;

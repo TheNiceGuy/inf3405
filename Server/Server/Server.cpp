@@ -20,8 +20,8 @@
 using namespace std;
 
 Server::Server(const string& adresse, uint_t port) {
-	addr_ = adresse;
-	port_ = port;
+    addr_ = adresse;
+    port_ = port;
 }
 
 Server::~Server() {
@@ -29,7 +29,7 @@ Server::~Server() {
 }
 
 bool Server::initialise() {
-	sockaddr_in service;
+    sockaddr_in service;
     service.sin_family = AF_INET;
 
     /* make sure the port is valid */
@@ -45,38 +45,38 @@ bool Server::initialise() {
     }
 
 #ifdef __WIN32__
-	/* start the WINSOCK API */
-	WSADATA wsaData;
-	int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
-	if (result != NO_ERROR) {
+    /* start the WINSOCK API */
+    WSADATA wsaData;
+    int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
+    if (result != NO_ERROR) {
         cout << "WSAStartup() failed: error " << result << endl;
-		return false;
-	}
+        return false;
+    }
 #endif
 
-	/* create the listening socket of the server */
-	socket_ = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (socket_ != INVALID_SOCKET) {
+    /* create the listening socket of the server */
+    socket_ = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (socket_ != INVALID_SOCKET) {
         cout << "socket() failed: error " << errno << endl;
 #ifdef __WIN32__
-		WSACleanup();
+        WSACleanup();
 #endif
-		return false;
-	}
+        return false;
+    }
 
-	/* bind the listening socket to the address */
-	if (bind(socket_, (sockaddr*)& service, sizeof(service)) == SOCKET_ERROR) {
+    /* bind the listening socket to the address */
+    if (bind(socket_, (sockaddr*)& service, sizeof(service)) == SOCKET_ERROR) {
         cout << "bind() failed: error " << errno << endl;
         goto CLEANUP;
-	}
+    }
 
-	/* set the socket as listening */
-	if (listen(socket_, 1) == SOCKET_ERROR) {
+    /* set the socket as listening */
+    if (listen(socket_, 1) == SOCKET_ERROR) {
         cout << "listen() failed: error " << errno << endl;
         goto CLEANUP;
-	}
+    }
 
-	/* create the mutex for syncronisation */
+    /* create the mutex for syncronisation */
 #ifdef __LINUX__
     if(pthread_mutex_init(&mutex_, NULL) < 0) {
         cout << "pthread_mutex_init() failed: error" << errno << endl;
@@ -84,11 +84,11 @@ bool Server::initialise() {
     }
 #endif
 #ifdef __WIN32__
-	mutex_ = CreateMutex(NULL, FALSE, NULL);
-	if (mutex_ == NULL) {
+    mutex_ = CreateMutex(NULL, FALSE, NULL);
+    if (mutex_ == NULL) {
         cout << "CreateMutex() failed: error" << GetLastError() << endl;
-		goto CLEANUP;
-	}
+        goto CLEANUP;
+    }
 #endif
 
     return true;
@@ -98,28 +98,28 @@ CLEANUP:
     close(socket_);
 #endif
 #ifdef __WIN32__
-	closesocket(socket_);
-	WSACleanup();
+    closesocket(socket_);
+    WSACleanup();
 #endif
     return false;
 }
 
 void Server::waitConnexion() {
-	/* continuously listen for incoming connections */
-	while (true) {
-		/* wait for a new connection */
-		socket_t socket = accept(socket_, NULL, NULL);
-		if(socket == INVALID_SOCKET) {
+    /* continuously listen for incoming connections */
+    while (true) {
+        /* wait for a new connection */
+        socket_t socket = accept(socket_, NULL, NULL);
+        if(socket == INVALID_SOCKET) {
             cout << "accept() failed: error " << errno << endl;
-			return;
-		}
+            return;
+        }
 
-		/* create a new thread for the client */
-		Client* client = new Client(this, socket);
+        /* create a new thread for the client */
+        Client* client = new Client(this, socket);
 
-		/* add the new client into the list */
-		clients_.push_back(client);
-	}
+        /* add the new client into the list */
+        clients_.push_back(client);
+    }
 }
 
 bool Server::authentificate(const string& name, const string& pass) {
@@ -143,7 +143,7 @@ bool Server::authentificate(const string& name, const string& pass) {
 }
 
 bool Server::sendText(Client* client, const string& msg) {
-	/* lock the mutex since we only handle one message at a time */
+    /* lock the mutex since we only handle one message at a time */
 #ifdef __LINUX__
     int err = pthread_mutex_lock(&mutex_);
     if(err != 0) {
@@ -152,7 +152,7 @@ bool Server::sendText(Client* client, const string& msg) {
     }
 #endif
 #ifdef __WIN32__
-	if(WaitForSingleObject(mutex_, INFINITE) == WAIT_FAILED) {
+    if(WaitForSingleObject(mutex_, INFINITE) == WAIT_FAILED) {
         cout << "WaitForSingleObject() failed: error " << GetLastError() << endl;
         return false;
     }
@@ -171,27 +171,27 @@ bool Server::sendText(Client* client, const string& msg) {
     message.port    = client->getSocketPort();
     msg.copy((char*) &message.text, TEXT_MAX_LENGTH, 0);
 
-	/* we send the message to other client */
-	for (Client* c : clients_) {
-		/* make sure we're not sending the message back to the same client */
-		if (c == client)
-			continue;
+    /* we send the message to other client */
+    for (Client* c : clients_) {
+        /* make sure we're not sending the message back to the same client */
+        if (c == client)
+            continue;
 
-		/* send the message to the other clients */
-		c->sendMessage(&message, sizeof(struct msg_server_text));
-	}
+        /* send the message to the other clients */
+        c->sendMessage(&message, sizeof(struct msg_server_text));
+    }
 
-	/* write the new message into the backlog */
-	db_.addMsg(&message);
+    /* write the new message into the backlog */
+    db_.addMsg(&message);
 
-	/* release the mutex */
+    /* release the mutex */
 #ifdef __LINUX__
     err = pthread_mutex_unlock(&mutex_);
     if(err != 0)
         cout << "pthread_mutex_unlock() failed: error " << err << endl;
 #endif
 #ifdef __WIN32__
-	if(ReleaseMutex(mutex_) == 0)
+    if(ReleaseMutex(mutex_) == 0)
         cout << "ReleaseMutex() failed: error " << GetLastError() << endl;
 #endif
 

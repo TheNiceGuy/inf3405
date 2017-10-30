@@ -7,20 +7,20 @@
 
 class Database {
 public:
-	Database();
+    Database();
 
-	Database(const std::string& file);
+    Database(const std::string& file);
 
-	~Database();
+    ~Database();
 
-	void addMsg(struct msg_server_text* msg);
+    void addMsg(struct msg_server_text* msg);
 
     User* getUser(const std::string& name) const;
 
 
 private:
-	std::vector<User> users_;
-	std::vector<std::string> backlog_;
+    std::vector<User> users_;
+    std::vector<std::string> backlog_;
 };
 
 #endif

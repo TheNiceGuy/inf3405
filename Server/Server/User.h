@@ -5,19 +5,19 @@
 
 class User {
 public:
-	User();
+    User();
 
-	User(const std::string& name, const std::string& pass);
+    User(const std::string& name, const std::string& pass);
 
-	~User();
+    ~User();
 
-	std::string getName() const;
+    std::string getName() const;
 
     bool validatePass(const std::string& pass) const;
 
 private:
-	std::string name_;
-	std::string pass_;
+    std::string name_;
+    std::string pass_;
 };
 
 #endif
