@@ -4,7 +4,8 @@
 using namespace std;
 
 User::User() {
-
+    name_ = "";
+    pass_ = "";
 }
 
 User::User(const string& name, const string& pass) {
