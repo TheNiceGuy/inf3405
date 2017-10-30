@@ -1,20 +1,26 @@
-#pragma once
+#ifndef DATABASE_H
+#define DATABASE_H
 
 #include <vector>
-#include "Utilisateur.h"
+#include <string>
+#include "User.h"
 
 class Database {
 public:
 	Database();
 
-	Database(std::string fichier);
+	Database(const std::string& file);
 
 	~Database();
 
-	void addMsg(std::string msg);
+	void addMsg(struct msg_server_text* msg);
+
+    User* getUser(const std::string& name) const;
 
 
 private:
-	std::vector<Utilisateur> utilisateurs_;
-	std::vector<std::string> historique;
+	std::vector<User> users_;
+	std::vector<std::string> backlog_;
 };
+
+#endif
