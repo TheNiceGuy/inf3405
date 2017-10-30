@@ -125,7 +125,13 @@ void Server::waitConnexion() {
 bool Server::authentificate(const string& name, const string& pass) {
     /* check if the user exists */
     User* user = db_.getUser(name);
-    if(user != nullptr && !user->validatePass(pass))
+
+    /* create the user if it doesn't exist */
+    if(user == nullptr)
+        return (db_.addUser(name, pass) !=  nullptr);
+
+    /* check is the password is valid */
+    if(!user->validatePass(pass))
         return false;
 
     /* check if another client is connected with that account */
