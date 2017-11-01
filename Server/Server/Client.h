@@ -1,16 +1,16 @@
 #ifndef CLIENT_H
 #define CLIENT_H
 
+#include "Utils.h"
+
 #ifdef __LINUX__
     #include <sys/socket.h>
 #endif
-
 #ifdef __WIN32__
 
 #endif
 
 #include <string>
-#include "Utils.h"
 #include "Server.h"
 #include "Message.h"
 

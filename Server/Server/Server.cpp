@@ -8,7 +8,6 @@
     #include <string.h>
     #include <unistd.h>
 #endif
-
 #ifdef __WIN32__
     #include <winsock2.h>
     #include <windows.h>

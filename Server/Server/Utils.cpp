@@ -1,11 +1,11 @@
+#include "Utils.h"
+
 #ifdef __LINUX__
     #include <arpa/inet.h>
 #endif
 #ifdef __WIN32__
     #include <ws2tcpip.h>
 #endif
-
-#include "Utils.h"
 
 using namespace std;
 
