@@ -145,7 +145,7 @@ struct msg_server_text {
  */
 struct msg_buffer {
     /** The current position to write. */
-    uint_t pos;
+    ssize_t pos;
 
     /** The buffer itself. */
     uint8_t buffer[MESSAGE_MAX_SIZE];

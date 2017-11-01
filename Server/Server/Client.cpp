@@ -1,18 +1,18 @@
 #include <iostream>
 
+#include "Utils.h"
+
 #ifdef __LINUX__
     #include <unistd.h>
     #include <sys/socket.h>
     #include <netinet/in.h>
 #endif
-
 #ifdef __WIN32__
     #include <winsock2.h>
     #include <ws2tcpip.h>
     #include <windows.h>
 #endif
 
-#include "Utils.h"
 #include "Client.h"
 #include "Message.h"
 
