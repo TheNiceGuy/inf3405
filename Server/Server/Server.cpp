@@ -19,9 +19,10 @@
 
 using namespace std;
 
-Server::Server(const string& adresse, uint_t port) {
-    addr_ = adresse;
-    port_ = port;
+Server::Server(const string& db, const string& addr, uint_t port) :
+    addr_(addr),
+    port_(port),
+    db_(db) {
 }
 
 Server::~Server() {
@@ -31,6 +32,12 @@ Server::~Server() {
 bool Server::initialise() {
     sockaddr_in service;
     service.sin_family = AF_INET;
+
+    /* load the database */
+    if(!db_.load()) {
+        cout << "Error: could not load the database file" << endl;
+        return false;
+    }
 
     /* make sure the port is valid */
     if(!convertAddr(addr_, &service)) {

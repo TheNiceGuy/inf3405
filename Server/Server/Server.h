@@ -25,10 +25,11 @@ public:
     /**
      * The value constructor.
      *
+     * @param db   The database file.
      * @param addr The listening address.
      * @param port The TCP port of the listening address.
      */
-    Server(const std::string& addr, uint_t port);
+    Server(const std::string& db, const std::string& addr, uint_t port);
 
     /**
      * The destructor.
