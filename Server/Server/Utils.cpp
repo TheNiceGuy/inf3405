@@ -1,5 +1,7 @@
 #include "Utils.h"
 
+#include <limits>
+#include <stdexcept>
 #ifdef __LINUX__
     #include <arpa/inet.h>
 #endif
@@ -45,6 +47,17 @@ bool convertAddr(const std::string& addr, struct sockaddr_in* out) {
     
     /* return error */
     return (out->sin_addr.s_addr != INADDR_NONE);
+}
+
+uint_t stou(const string& str, size_t* idx, int base) {
+    /* perform the normal conversion */
+    unsigned long result = std::stoul(str, idx, base);
+
+    /* make sure it is positive */
+    if (result > numeric_limits<unsigned>::max())
+        throw out_of_range("stou");
+
+    return result;
 }
 
 #ifdef __WIN32__

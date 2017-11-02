@@ -7,7 +7,7 @@
     #include <sys/socket.h>
 #endif
 #ifdef __WIN32__
-
+    #include <winsock2.h>
 #endif
 
 #include "Server.h"

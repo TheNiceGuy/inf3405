@@ -41,7 +41,7 @@ public:
      *
      * @return If the server was successfully initialised, `true`, else `false`.
      */
-    bool initialise();
+    bool init();
 
     /**
      * This method handles the connection of new clients. Each time a client

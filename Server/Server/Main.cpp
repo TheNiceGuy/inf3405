@@ -1,7 +1,8 @@
+#include "Utils.h"
+#include "Server.h"
+
 #include <iostream>
 #include <string>
-
-#include "Utils.h"
 
 using namespace std;
 
@@ -37,7 +38,7 @@ void showHelp() {
 char** parseShortCommands(char** cmds, char** last) {
     fail = true;
     
-    cout << "Short options not implemented" << endl;
+    cout << "Short options not implemented." << endl;
 
     return cmds;
 }
@@ -139,11 +140,25 @@ int main(int argc, char** argv) {
         port = "10025";
     }
 
-    /* TODO: start the server */
+    /* print current configuration */
     cout << "Starting the server using the following options:" << endl;
     cout << "\t database file    : " << database << endl;
     cout << "\t listening address: " << addr << endl;
     cout << "\t listening port   : " << port << endl;
+
+    /* convert the port into an int */
+    int fport;
+    try {
+        fport = stou(port);
+    } catch(const exception& ex) {
+        cout << "Error: the specified port isn't valid" << endl;
+        return 1;
+    }
+
+    /* initialise the server */
+    Server server(database, addr, fport);
+    if(!server.init())
+        return 1;
 
     return 0;
 }

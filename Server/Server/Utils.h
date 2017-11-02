@@ -41,6 +41,8 @@ bool convertPort(uint_t port, struct sockaddr_in* out);
 
 bool convertAddr(const std::string& addr, struct sockaddr_in* out);
 
+uint_t stou(const std::string& str, size_t* idx = 0, int base = 10);
+
 #ifdef __WIN32__
 std::wstring widen(const std::string& input);
 #endif

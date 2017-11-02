@@ -29,12 +29,12 @@ Server::~Server() {
     /* TODO: cleanup*/
 }
 
-bool Server::initialise() {
+bool Server::init() {
     sockaddr_in service;
     service.sin_family = AF_INET;
 
     /* load the database */
-    if(!db_.load()) {
+    if(!db_.init()) {
         cout << "Error: could not load the database file" << endl;
         return false;
     }

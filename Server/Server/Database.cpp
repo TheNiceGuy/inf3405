@@ -12,6 +12,8 @@
 
 using namespace std;
 
+bool fileExists(const string& path);
+
 Database::Database(const string& file) :
     file_(file) {
 }
@@ -21,11 +23,17 @@ Database::~Database() {
 }
 
 bool Database::init() {
+    /* start with an empty database if the file doesn't exist */
+    if(!fileExists(file_))
+        return true;
 
+    cout << "wow" << endl;
 
+    /* try to load the database file */
     if(!load())
         return false;
 
+    /* the database has been loaded */
     return true;
 }
 
@@ -71,7 +79,7 @@ bool fileExists(const string& path) {
 }
 #endif
 #ifdef __WIN32__
-bool fileExist(const string& path) {
+bool fileExists(const string& path) {
     /* get attributes of the file */
     DWORD attrib = GetFileAttributesW(widen(path).c_str());
 
