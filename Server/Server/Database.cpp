@@ -1,6 +1,13 @@
-#include <iostream>
-
 #include "Utils.h"
+
+#include <iostream>
+#ifdef __LINUX__
+    #include <sys/stat.h>
+#endif
+#ifdef __WIN32__
+    #include <windows.h>
+#endif
+
 #include "Database.h"
 
 using namespace std;
@@ -54,12 +61,19 @@ void Database::setFile(const string& file) {
     file_ = file;
 }
 
-#ifdef __WIN32__
-bool fileExist(LPWSTR path) {
-    string s = "This is surely ASCII.";
-    wstring w(s.begin(), s.end());
+#ifdef __LINUX__
+bool fileExists(const string& path) {
+    /* allocate memory for the structure */
+    struct stat buffer;   
 
-    DWORD attrib = GetFileAttributesW(w.c_str());
+    /* test if the file exists */
+    return (stat (path.c_str(), &buffer) == 0); 
+}
+#endif
+#ifdef __WIN32__
+bool fileExist(const string& path) {
+    /* get attributes of the file */
+    DWORD attrib = GetFileAttributesW(widen(path).c_str());
 
     /* test file attributes */
     if(attrib == INVALID_FILE_ATTRIBUTES)

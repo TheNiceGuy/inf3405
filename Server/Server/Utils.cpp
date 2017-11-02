@@ -46,3 +46,22 @@ bool convertAddr(const std::string& addr, struct sockaddr_in* out) {
     /* return error */
     return (out->sin_addr.s_addr != INADDR_NONE);
 }
+
+#ifdef __WIN32__
+wstring widen(const string& input) {
+    /* trivial case */
+    if(input.empty())
+        return wstring();
+
+    /* compute the required length of the new string */
+    size_t length = MultiByteToWideChar(CP_UTF8, 0, input.c_str(), (int) input.length(), 0, 0);
+    
+    /* construct the new string of required length */
+    wstring ret(length, L'\0');
+
+    /* convert the old string to the new format */
+    MultiByteToWideChar(CP_UTF8, 0, input.c_str(), (int) input.length(), &ret[0], (int) ret.length());
+
+    return ret;
+}
+#endif

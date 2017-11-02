@@ -10,7 +10,6 @@
 
 #endif
 
-#include <string>
 #include "Server.h"
 #include "Message.h"
 

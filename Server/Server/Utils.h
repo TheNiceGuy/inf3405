@@ -18,18 +18,15 @@
 #endif
 
 #ifdef __WIN32__
-	#define _WINSOCKAPI_
-    #include <windows.h>
-    #include <winsock2.h>
-    #include <BaseTsd.h>
-
-	typedef SOCKET socket_t;
+	typedef long long unsigned int socket_t;
     typedef unsigned long tid_t;
-    typedef SSIZE_T ssize_t;
-    typedef HANDLE thread_t;
-    typedef HANDLE mutex_t;
+    typedef long long int ssize_t;
+    typedef void* thread_t;
+    typedef void* mutex_t;
 
-    #pragma warning(disable : 4996)
+    #ifdef _MSC_VER
+        #pragma warning(disable : 4996)
+    #endif
 #endif
 
 typedef unsigned int uint_t;
@@ -43,5 +40,9 @@ std::string getStringNullOrLength(uint8_t* buffer, uint_t len);
 bool convertPort(uint_t port, struct sockaddr_in* out);
 
 bool convertAddr(const std::string& addr, struct sockaddr_in* out);
+
+#ifdef __WIN32__
+std::wstring widen(const std::string& input);
+#endif
 
 #endif
