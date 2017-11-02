@@ -137,7 +137,7 @@ int main(int argc, char** argv) {
     /* check if a listening port was specified */
     if(port == nullptr) {
         cout << "Using default listening port." << endl;
-        port = "10025";
+        port = "5025";
     }
 
     /* print current configuration */

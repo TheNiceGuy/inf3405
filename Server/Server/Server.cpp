@@ -41,13 +41,13 @@ bool Server::init() {
 
     /* make sure the port is valid */
     if(!convertAddr(addr_, &service)) {
-        cout << "Error: the specified port isn't valid" << endl;
+        cout << "Error: the specified address isn't valid" << endl;
         return false;
     }
 
     /* make sure the address is valid */
     if(!convertPort(port_, &service)) {
-        cout << "Error: the specified address isn't valid" << endl;
+        cout << "Error: the specified port isn't valid" << endl;
         return false;
     }
 
