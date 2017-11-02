@@ -1,5 +1,7 @@
 #include <iostream>
 
+#include "Utils.h"
+
 #ifdef __LINUX__
     #include <sys/socket.h>
     #include <netinet/in.h>
@@ -13,7 +15,6 @@
     #include <windows.h>
 #endif
 
-#include "Utils.h"
 #include "Server.h"
 
 using namespace std;

@@ -34,9 +34,9 @@
 
 typedef unsigned int uint_t;
 
-const uint_t MIN_PORT_ALLOWED = 10000;
+const uint_t MIN_PORT_ALLOWED = 5000;
 
-const uint_t MAX_PORT_ALLOWED = 10050;
+const uint_t MAX_PORT_ALLOWED = 5050;
 
 std::string getStringNullOrLength(uint8_t* buffer, uint_t len);
 
