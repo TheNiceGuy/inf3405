@@ -1,4 +1,5 @@
-#pragma once
+#ifndef MESSAGE_H
+#define MESSAGE_H
 
 #include <stdint.h>
 #include "Utils.h"
@@ -31,8 +32,11 @@ enum type : uint8_t {
     /** This message is a client sending text to the server. */
     MSG_CLIENT_TEXT = 3,
 
-    /** This message is the server sending text back to the other clients. */
-    MSG_SERVER_TEXT = 4,
+    /** This structure is a database message. */
+    DB_MESSAGE = 4,
+
+    /** This structure is a database user. */
+    DB_USER = 5,
 };
 
 /**
@@ -91,11 +95,14 @@ struct msg_client_text {
 };
 
 /**
- * This structure defines text that is sent from the server to clients.
+ * This structure defines a message stored in the database.
  */
-struct msg_server_text {
-    /** The type of message, it should be MSG_SERVER_TEXT. */
+struct db_message {
+    /** The type of message, it should be DB_MESSAGE. */
     uint8_t type;
+
+    /** The name of the user sending the message.  */
+    uint8_t name[NAME_MAX_LENGTH];
 
     /** The address of the client sending the text. */
     uint8_t addr[4];
@@ -103,10 +110,25 @@ struct msg_server_text {
     /** The port of the client sending the text. */
     uint32_t port;
 
+    /** The time  */
+    uint64_t time;
+
     /** The text that the user sent to the other users. */
     uint8_t text[TEXT_MAX_LENGTH];
+};
 
-    /* TODO: add time */
+/**
+ * This structure defines a user stored in the database.
+ */
+struct db_user {
+    /** The type of the message, it should be DB_USER. */
+    uint8_t type;
+
+    /** The name of the user. */
+    uint8_t name[NAME_MAX_LENGTH];
+
+    /** The password of the user. */
+    uint8_t pass[PASS_MAX_LENGTH];
 };
 
 /**
@@ -164,3 +186,5 @@ void messageBufferInit(struct msg_buffer* buffer);
  * @param buffer The buffer to rewind.
  */
 void rewindMessageBuffer(struct msg_buffer* buffer);
+
+#endif

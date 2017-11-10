@@ -37,7 +37,7 @@ endif
 
 OBJECTS := $(BUILD)/Main.o \
            $(BUILD)/Client.o \
-           $(BUILD)/Message.o \
+           $(BUILD)/MessageTypes.o \
            $(BUILD)/Server.o \
            $(BUILD)/Utils.o \
            $(BUILD)/Database.o \
@@ -51,13 +51,13 @@ $(BUILD)/Main.o: $(SRCDIR)/Main.cpp
 
 $(BUILD)/Client.o: $(SRCDIR)/Client.cpp \
                    $(SRCDIR)/Client.h \
-                   $(SRCDIR)/Message.h \
+                   $(SRCDIR)/MessageTypes.h \
                    $(SRCDIR)/Utils.h
 	$(CC) -o $@ -c $< $(CCFLAGS)
 
-$(BUILD)/Message.o: $(SRCDIR)/Message.cpp \
-                    $(SRCDIR)/Message.h \
-                    $(SRCDIR)/Utils.h
+$(BUILD)/MessageTypes.o: $(SRCDIR)/MessageTypes.cpp \
+                         $(SRCDIR)/MessageTypes.h \
+                         $(SRCDIR)/Utils.h
 	$(CC) -o $@ -c $< $(CCFLAGS)
 
 $(BUILD)/Server.o: $(SRCDIR)/Server.cpp \

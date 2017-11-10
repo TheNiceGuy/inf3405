@@ -1,6 +1,8 @@
 #include "Utils.h"
 #include "User.h"
 
+#include <string.h>
+
 using namespace std;
 
 User::User() {
@@ -23,4 +25,13 @@ string User::getName() const {
 
 bool User::validatePass(const string& pass) const {
     return (pass_ == pass);
+}
+
+void User::serialize(uint8_t* buffer) const {
+    struct db_user* user = (struct db_user*) buffer;
+
+    /* copy the fields */
+    buffer[0] = DB_USER;
+    memcpy(&user->name, name_.c_str(), NAME_MAX_LENGTH);
+    memcpy(&user->pass, pass_.c_str(), PASS_MAX_LENGTH);
 }

@@ -14,7 +14,6 @@
 #endif
 
 #include "Client.h"
-#include "Message.h"
 
 using namespace std;
 

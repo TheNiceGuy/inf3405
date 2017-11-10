@@ -11,7 +11,7 @@
 #endif
 
 #include "Server.h"
-#include "Message.h"
+#include "MessageTypes.h"
 
 /* server class prototype */
 class Server;

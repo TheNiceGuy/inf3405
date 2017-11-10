@@ -1,5 +1,5 @@
 #include "Utils.h"
-#include "Message.h"
+#include "MessageTypes.h"
 
 void messageBufferInit(struct msg_buffer* buffer) {
     buffer->pos = 0;
@@ -26,8 +26,8 @@ void rewindMessageBuffer(struct msg_buffer* buffer) {
         case MSG_CLIENT_TEXT:
             size = sizeof(struct msg_client_text);
             break;
-        case MSG_SERVER_TEXT:
-            size = sizeof(struct msg_server_text);
+        case DB_MESSAGE:
+            size = sizeof(struct db_message);
             break;
         default:
             return;
