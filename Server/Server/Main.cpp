@@ -1,6 +1,9 @@
 #include "Utils.h"
 #include "Server.h"
 
+#ifdef __LINUX__
+    #include <csignal>
+#endif
 #include <iostream>
 #include <string>
 
@@ -86,6 +89,18 @@ char** parseLongCommands(char** cmds, char** last) {
     return cmds;
 }
 
+/** The server object. */
+static Server* server = nullptr;
+
+void sigint_handler(int signal) {
+    /* make sure the server have been created */
+    if(server == nullptr)
+        return;
+
+    /* shutdown the server */
+    server->stop();
+}
+
 int main(int argc, char** argv) {
     /* get the executable */
     executable = argv[0];
@@ -155,10 +170,17 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    signal(SIGINT, sigint_handler);
+
     /* initialise the server */
-    Server server(database, addr, fport);
-    if(!server.init())
-        return 1;
+    try {
+        server = new Server(database, addr, fport);
+        server->waitConnexion();
+    } catch(const exception& e) {
+        cout << e.what() << endl;
+    }
+
+    delete server;
 
     return 0;
 }

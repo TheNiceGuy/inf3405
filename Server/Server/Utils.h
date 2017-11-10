@@ -37,7 +37,7 @@ const uint_t MAX_PORT_ALLOWED = 5050;
 
 std::string getStringNullOrLength(uint8_t* buffer, uint_t len);
 
-bool convertPort(uint_t port, struct sockaddr_in* out);
+bool isPortValid(uint_t port);
 
 bool convertAddr(const std::string& addr, struct sockaddr_in* out);
 

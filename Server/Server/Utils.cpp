@@ -25,7 +25,7 @@ string getStringNullOrLength(uint8_t* buffer, uint_t len) {
     return string((char*) buffer);
 }
 
-bool convertPort(uint_t port, struct sockaddr_in* out) {
+bool isPortValid(uint_t port) {
     /* lower bound */
     if(port < MIN_PORT_ALLOWED)
         return false;
@@ -33,9 +33,6 @@ bool convertPort(uint_t port, struct sockaddr_in* out) {
     /* upper bound */
     if(port > MAX_PORT_ALLOWED)
         return false;
-
-    /* convert the port */
-    out->sin_port = htons(port);
 
     /* should be good */
     return true;

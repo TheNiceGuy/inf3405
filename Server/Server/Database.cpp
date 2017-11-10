@@ -105,9 +105,13 @@ User* Database::addUser(const std::string& name, const std::string& pass) {
 }
 
 User* Database::getUser(const string& name) const {
+    /* search for the user */
 	for(uint_t i = 0; i < users_.size(); i++)
 		if (users_[i]->getName() == name)
 			return users_[i];
+
+    /* the user hasn't been found */
+    return nullptr;
 }
 
 string Database::getFile() const {

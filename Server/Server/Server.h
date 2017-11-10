@@ -37,19 +37,14 @@ public:
     ~Server();
 
     /**
-     * This method performs the server's initialisation.
-     *
-     * @return If the server was successfully initialised, `true`, else `false`.
-     */
-    bool init();
-
-    /**
      * This method handles the connection of new clients. Each time a client
      * connects, a new thread is started in order to handle the client
      * requests. This method blocks the main thread until the server gets
      * shutdown.
      */
     void waitConnexion();
+
+    void stop();
 
     /**
      * This method authentificates a client. A client has a username and a
@@ -80,6 +75,9 @@ public:
     bool sendText(Client* client, const std::string& msg);
 
 private:
+    /** A flag that tells whether the server is running or not. */
+    bool running_;
+
     /** The address to listen to. */
     std::string addr_;
 
