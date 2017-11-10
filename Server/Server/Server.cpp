@@ -63,7 +63,7 @@ bool Server::init() {
 
     /* create the listening socket of the server */
     socket_ = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (socket_ != INVALID_SOCKET) {
+    if (socket_ == INVALID_SOCKET) {
         cout << "socket() failed: error " << errno << endl;
 #ifdef __WIN32__
         WSACleanup();
@@ -175,8 +175,8 @@ bool Server::sendText(Client* client, const string& msg) {
     uint8_t* addr = (uint8_t*) client->getSocketAddr();
 
     /* build the message to send back */
-    struct msg_server_text message;
-    message.type    = MSG_SERVER_TEXT;
+    struct db_message message;
+    message.type    = DB_MESSAGE;
     message.addr[0] = addr[0];
     message.addr[1] = addr[1];
     message.addr[2] = addr[2];
@@ -191,7 +191,7 @@ bool Server::sendText(Client* client, const string& msg) {
             continue;
 
         /* send the message to the other clients */
-        c->sendMessage(&message, sizeof(struct msg_server_text));
+        c->sendMessage(&message, sizeof(struct db_message));
     }
 
     /* write the new message into the backlog */

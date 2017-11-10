@@ -15,9 +15,7 @@
 
 using namespace std;
 
-bool fileExists(const string& path) {
-	return true;
-}
+bool fileExists(const string& path);
 
 Database::Database(const string& file) : file_(file)
 {
@@ -45,7 +43,7 @@ bool Database::load() {
 	int i(0), j(0);
 	if (fileRead.is_open())
 	{
-		uint8_t buffer[200];
+		uint8_t buffer[MESSAGE_MAX_SIZE];
 		while (!fileRead.eof()) {
 			uint8_t* current = buffer;
 			fileRead.read((char*)current++, 1);
@@ -65,7 +63,6 @@ bool Database::load() {
 
 		cout << "the entire file content is in memory";
 
-		delete[] buffer;
 		return true;
 	}
 	else return false;
@@ -79,13 +76,13 @@ bool Database::save() const {
 		return false;
 	}
 
-	for (int i = 0; i < users_.size(); i++) {
+	for (uint_t i = 0; i < users_.size(); i++) {
 		struct db_user buffer;
 		users_[i]->serialize((uint8_t*)&buffer);
 		file.write((char*)&buffer, sizeof(struct db_user));
 	}
 
-	for (int i = 0; i < backlog_.size(); i++) {
+	for (uint_t i = 0; i < backlog_.size(); i++) {
 		struct db_message buffer;
 		backlog_[i]->serialize((uint8_t*)&buffer);
 		file.write((char*)&buffer, sizeof(struct db_message));
@@ -108,7 +105,7 @@ User* Database::addUser(const std::string& name, const std::string& pass) {
 }
 
 User* Database::getUser(const string& name) const {
-	for (int i = 0; i < users_.size(); i++)
+	for(uint_t i = 0; i < users_.size(); i++)
 		if (users_[i]->getName() == name)
 			return users_[i];
 }

@@ -31,6 +31,10 @@ Message::Message(struct db_message* msg) :
     time_ = msg->time;
 }
 
+Message::~Message() {
+
+}
+
 void Message::serialize(uint8_t* buffer) const {
     struct db_message* msg = (struct db_message*) buffer;
 
