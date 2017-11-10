@@ -4,6 +4,7 @@
 #include "DatabaseObject.h"
 
 #include <string>
+#include <ctime>
 
 class Message : public DatabaseObject {
 public:
