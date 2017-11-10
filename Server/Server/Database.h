@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include "User.h"
+#include "Message.h"
 
 /**
  * This class defines the database of users and messages.
@@ -49,7 +50,7 @@ public:
      *
      * @param msg The new message to add.
      */
-    void addMsg(struct msg_server_text* msg);
+    void addMsg(const Message& msg);
 
     /**
      * This method adds a new user to the database.
@@ -97,10 +98,10 @@ private:
     std::string file_;
 
     /** The list of users in the database. */
-    std::vector<User> users_;
+    std::vector<User*> users_;
 
     /** The list of messages that has been sent. */
-    std::vector<struct msg_server_text*> backlog_;
+    std::vector<Message*> backlog_;
 };
 
 #endif
