@@ -1,5 +1,5 @@
-#ifndef MESSAGE_H
-#define MESSAGE_H
+#ifndef MESSAGE_TYPES_H
+#define MESSAGE_TYPES_H
 
 #include <stdint.h>
 #include "Utils.h"

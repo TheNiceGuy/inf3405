@@ -41,7 +41,8 @@ OBJECTS := $(BUILD)/Main.o \
            $(BUILD)/Server.o \
            $(BUILD)/Utils.o \
            $(BUILD)/Database.o \
-           $(BUILD)/User.o
+           $(BUILD)/User.o \
+           $(BUILD)/Message.o
 
 all: dirs $(OBJECTS)
 	$(CC) -o $(BUILD)/$(EXEC) $(OBJECTS) $(LDFLAGS)
@@ -75,6 +76,10 @@ $(BUILD)/Database.o: $(SRCDIR)/Database.cpp \
 
 $(BUILD)/User.o: $(SRCDIR)/User.cpp \
                  $(SRCDIR)/User.h
+	$(CC) -o $@ -c $< $(CCFLAGS)
+
+$(BUILD)/Message.o: $(SRCDIR)/Message.cpp \
+                    $(SRCDIR)/Message.h
 	$(CC) -o $@ -c $< $(CCFLAGS)
 
 dirs:

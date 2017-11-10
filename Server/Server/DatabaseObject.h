@@ -3,6 +3,8 @@
 
 #include "MessageTypes.h"
 
+#include <cstdint>
+
 class DatabaseObject {
 
     virtual void serialize(uint8_t* buffer) const = 0;
