@@ -28,7 +28,7 @@ public:
      *
      * @param user A pointer to a user structure.
      */
-    User(const struct db_user& user);
+    User(const struct db_user* user);
 
     /**
      * Destructor.

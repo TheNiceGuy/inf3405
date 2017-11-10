@@ -15,6 +15,10 @@ User::User(const string& name, const string& pass) {
     pass_ = pass;
 }
 
+User::User(const struct db_user* user) {
+
+}
+
 User::~User() {
 
 }

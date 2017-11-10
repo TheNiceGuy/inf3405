@@ -7,6 +7,12 @@
 
 class Message : public DatabaseObject {
 public:
+    Message(struct msg_client_text* msg, std::string sender, uint8_t addr[4], uint32_t port);
+
+    Message(struct db_message* msg);
+
+    ~Message();
+
     void serialize(uint8_t* buffer) const;
 
 private:
