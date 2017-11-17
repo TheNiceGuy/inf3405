@@ -38,14 +38,6 @@ void showHelp() {
     cout << "  -h, --help                          " << "show this help" << endl;
 }
 
-char** parseShortCommands(char** cmds, char** last) {
-    fail = true;
-    
-    cout << "Short options not implemented." << endl;
-
-    return cmds;
-}
-
 char** parseLongCommands(char** cmds, char** last) {
     /* parse a long argument */
     if(string("--database").compare(cmds[0]) == 0) {
@@ -113,7 +105,7 @@ int main(int argc, char** argv) {
 
     while(++cmds != argv) {
         /* make sure that argument starts with a dash */
-        if(cmds[0][0] != '-') {
+        if(cmds[0][0] != '-' || cmds[0][1] != '-') {
             cout << "Invalid option: " << cmds[0] << endl;
             fail = true;
 
@@ -121,10 +113,7 @@ int main(int argc, char** argv) {
         }
 
         /* parse the command */
-        if(cmds[0][1] == '-')
-            cmds = parseLongCommands(cmds, argv);
-        else
-            cmds = parseShortCommands(cmds, argv);
+        cmds = parseLongCommands(cmds, argv);
     }
 
     /* show help if specified */
