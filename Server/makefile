@@ -3,7 +3,7 @@ EXEC := server
 SRCDIR := Server
 BUILD  := Build
 
-BASE_CCFLAGS := -Wall -Wextra -pedantic -std=c++11 -g
+BASE_CCFLAGS := -Wall -Wextra -pedantic -std=c++11 -g -I./$(SRCDIR)
 BASE_LDFLAGS :=
 
 LINUX_CC := g++
@@ -42,7 +42,12 @@ OBJECTS := $(BUILD)/Main.o \
            $(BUILD)/Utils.o \
            $(BUILD)/Database.o \
            $(BUILD)/User.o \
-           $(BUILD)/Message.o
+           $(BUILD)/Message/Auth.o \
+           $(BUILD)/Message/Quit.o \
+           $(BUILD)/Message/Status.o \
+           $(BUILD)/Message/ServerText.o \
+           $(BUILD)/Message/ClientText.o \
+           $(BUILD)/Message/SerializableObject.o
 
 all: dirs $(OBJECTS)
 	$(CC) -o $(BUILD)/$(EXEC) $(OBJECTS) $(LDFLAGS)
@@ -78,12 +83,38 @@ $(BUILD)/User.o: $(SRCDIR)/User.cpp \
                  $(SRCDIR)/User.h
 	$(CC) -o $@ -c $< $(CCFLAGS)
 
-$(BUILD)/Message.o: $(SRCDIR)/Message.cpp \
-                    $(SRCDIR)/Message.h
+$(BUILD)/Message/Auth.o: $(SRCDIR)/Message/Auth.cpp \
+                         $(SRCDIR)/Message/Auth.h \
+                         $(SRCDIR)/Message/SerializableObject.h
+	$(CC) -o $@ -c $< $(CCFLAGS)
+
+$(BUILD)/Message/Quit.o: $(SRCDIR)/Message/Quit.cpp \
+                         $(SRCDIR)/Message/Quit.h \
+                         $(SRCDIR)/Message/SerializableObject.h
+	$(CC) -o $@ -c $< $(CCFLAGS)
+
+$(BUILD)/Message/Status.o: $(SRCDIR)/Message/Status.cpp \
+                           $(SRCDIR)/Message/Status.h \
+                           $(SRCDIR)/Message/SerializableObject.h
+	$(CC) -o $@ -c $< $(CCFLAGS)
+
+$(BUILD)/Message/ServerText.o: $(SRCDIR)/Message/ServerText.cpp \
+                               $(SRCDIR)/Message/ServerText.h \
+                               $(SRCDIR)/Message/SerializableObject.h
+	$(CC) -o $@ -c $< $(CCFLAGS)
+
+$(BUILD)/Message/ClientText.o: $(SRCDIR)/Message/ClientText.cpp \
+                               $(SRCDIR)/Message/ClientText.h \
+                               $(SRCDIR)/Message/SerializableObject.h
+	$(CC) -o $@ -c $< $(CCFLAGS)
+
+$(BUILD)/Message/SerializableObject.o: $(SRCDIR)/Message/SerializableObject.cpp \
+                                       $(SRCDIR)/Message/SerializableObject.h
 	$(CC) -o $@ -c $< $(CCFLAGS)
 
 dirs:
 	mkdir -p $(BUILD)
+	mkdir -p $(BUILD)/Message
 
 clean:
 	rm -vf $(OBJECTS)
