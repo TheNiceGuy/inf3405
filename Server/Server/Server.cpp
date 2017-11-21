@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "Utils.h"
+#include "Message/ServerText.h"
 
 #ifdef __LINUX__
     #include <sys/socket.h>
@@ -238,18 +239,19 @@ bool Server::sendText(Client* client, const string& msg) {
     }
 #endif
 
-    /* get the client IP */
-    uint8_t* addr = (uint8_t*) client->getSocketAddr();
+    /* get message informations */
+    time_t timestamp = time(0);
+    uint32_t addr = client->getSocketAddr();
+    uint32_t port = client->getSocketPort();
+    string username = client->getName();
 
-    /* build the message to send back */
-    struct db_message message;
-    message.type    = DB_MESSAGE;
-    message.addr[0] = addr[0];
-    message.addr[1] = addr[1];
-    message.addr[2] = addr[2];
-    message.addr[3] = addr[3];
-    message.port    = client->getSocketPort();
-    msg.copy((char*) &message.text, TEXT_MAX_LENGTH, 0);
+    /* create the server message */
+    MessageServerText* text;
+    text = new MessageServerText(username, timestamp, addr, port, msg);
+
+    /* serialize the message */
+    uint8_t buffer[BUFFER_SIZE];
+    int len = text->serialize(buffer, BUFFER_SIZE);
 
     /* we send the message to other client */
     for (Client* c : clients_) {
@@ -258,11 +260,11 @@ bool Server::sendText(Client* client, const string& msg) {
             continue;
 
         /* send the message to the other clients */
-        c->sendMessage(&message, sizeof(struct db_message));
+        c->sendMessage(&buffer, len);
     }
 
     /* write the new message into the backlog */
-    db_.addMsg(&message);
+    db_.addMsg(text);
 
     /* release the mutex */
 #ifdef __LINUX__

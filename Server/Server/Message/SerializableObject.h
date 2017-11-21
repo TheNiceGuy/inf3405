@@ -21,6 +21,13 @@ public:
     virtual ~SerializableObject();
 
     /**
+     * This method returns the unique ID of the serializable object.
+     *
+     * @return The ID of the object.
+     */
+    virtual uint8_t getID() const = 0;
+
+    /**
      * This method returns the size of the object if it was serialized.
      *
      * @return The size of the serialized object.

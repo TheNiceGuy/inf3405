@@ -22,13 +22,6 @@ public:
     ~MessageAuth();
 
     /**
-     * This method returns the unique ID of the class.
-     *
-     * @return The ID of the class.
-     */
-    static uint8_t getID();
-
-    /**
      * This method deserializes an authentification message from a buffer.
      *
      * @param buffer The buffer containing a serialized message.
@@ -61,9 +54,10 @@ public:
      * Overloaded method *
      *********************/
 
+    uint8_t getID() const;
     uint_t getSize() const;
     int serialize(uint8_t* buffer, uint_t size) const;
-private:
+protected:
     /** The name of the user authentificating. */
     std::string name_;
 

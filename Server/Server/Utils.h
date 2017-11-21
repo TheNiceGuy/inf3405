@@ -6,6 +6,7 @@
 #ifdef __LINUX__
     #define INVALID_SOCKET -1
     #define SOCKET_ERROR   -1
+    #define PACK( __Declaration__ ) __Declaration__ __attribute__((__packed__))
 
     typedef int socket_t;
     typedef pid_t tid_t;
@@ -18,6 +19,7 @@
 #endif
 
 #ifdef __WIN32__
+    #define PACK( __Declaration__ ) __pragma( pack(push, 1) ) __Declaration__ __pragma( pack(pop) )
 	typedef long long unsigned int socket_t;
     typedef unsigned long tid_t;
     typedef long long int ssize_t;
@@ -30,6 +32,8 @@
 #endif
 
 typedef unsigned int uint_t;
+
+const uint_t BUFFER_SIZE = 1024;
 
 const uint_t MIN_PORT_ALLOWED = 5000;
 

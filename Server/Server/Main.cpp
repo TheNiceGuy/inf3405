@@ -24,6 +24,9 @@ static const char* port = nullptr;
 /** Whether the user wants to see the help message. */
 static bool showhelp = false;
 
+/** Whether the user wants to see the help message. */
+static string test = string("none");
+
 /** Whether the command parsing failed or not. */
 static bool fail = false;
 
@@ -32,10 +35,11 @@ void showHelp() {
     cout << "This command starts the chat server." << endl;
     cout << endl;
     cout << "The following arguments are valid:" << endl;
-    cout << "  -d, --database FILE                 " << "specify the database file" << endl;
-    cout << "  -a, --addr ADDRESS                  " << "specify the listening address" << endl;
-    cout << "  -p, --port PORT                     " << "specify the listening port" << endl;
-    cout << "  -h, --help                          " << "show this help" << endl;
+    cout << "  --database FILE                 " << "specify the database file" << endl;
+    cout << "  --addr ADDRESS                  " << "specify the listening address" << endl;
+    cout << "  --port PORT                     " << "specify the listening port" << endl;
+    cout << "  --help                          " << "show this help" << endl;
+    cout << "  --test MODULE                   " << "test a part of this program" << endl;
 }
 
 char** parseLongCommands(char** cmds, char** last) {
@@ -70,6 +74,16 @@ char** parseLongCommands(char** cmds, char** last) {
 
         /* copy the filename  */
         port = cmds[0];
+    } else if(string("--test").compare(cmds[0]) == 0) {
+        /* make sure the port is specified */
+        if(++cmds == last) {
+            cout << "Missing module for \"--test\" argument." << endl;
+            fail = true;
+            return --cmds;
+        }
+
+        /* copy the filename  */
+        test = string(cmds[0]);
     } else if(string("--help").compare(cmds[0]) == 0) {
         /* the user requested the help */
         showhelp = true;
@@ -80,6 +94,13 @@ char** parseLongCommands(char** cmds, char** last) {
 
     return cmds;
 }
+
+/**
+ * This method test the database.
+ *
+ * @param file The database file.
+ */
+void testDatabase(const string& file);
 
 /** The server object. */
 static Server* server = nullptr;
@@ -144,6 +165,18 @@ int main(int argc, char** argv) {
         port = "5025";
     }
 
+    /* check if the user wants to run some test */
+    if(test != "none") {
+        if(test == "database") {
+            testDatabase(database);
+        } else {
+            cout << "Unsupported module for testing." << endl;
+            return 1;
+        }
+
+        return 0;
+    }
+
     /* print current configuration */
     cout << "Starting the server using the following options:" << endl;
     cout << "\t database file    : " << database << endl;
@@ -172,4 +205,21 @@ int main(int argc, char** argv) {
     delete server;
 
     return 0;
+}
+
+void testDatabase(const string& file) {
+    Database db(file);
+    db.init();
+    db.print();
+
+    db.addMsg(new MessageServerText("user1", 1000, 1010, 5050, "hello world"));
+    db.addMsg(new MessageServerText("user2", 2000, 3000, 5051, "sup m8"));
+    db.addMsg(new MessageServerText("user1", 3000, 1010, 5050, "the quick brown fox jumps over the lazy dog"));
+
+    db.addUser("user1", "password");
+    db.addUser("user2", "passw0rrd123");
+    db.addUser("user3", "1234567890");
+
+    db.save();
+
 }

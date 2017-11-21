@@ -11,16 +11,18 @@ MessageStatus::~MessageStatus() {
 
 }
 
-uint8_t MessageStatus::getID() {
+uint8_t MessageStatus::getID() const {
     return MSG_RESP;
 }
 
 MessageStatus* MessageStatus::deserialize(const uint8_t* buffer, uint_t size) {
     uint_t pos = 0;
 
+    /* this removes a warning */
+    if(size < 1) return nullptr;
+
     /* make sure the type is correct */
-    if(buffer[pos++] != getID())
-        return nullptr;
+    if(buffer[pos++] != MSG_RESP) return nullptr;
 
     /* get the status */
     uint8_t status = buffer[pos];

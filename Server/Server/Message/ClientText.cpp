@@ -12,7 +12,7 @@ MessageClientText::~MessageClientText() {
 
 }
 
-uint8_t MessageClientText::getID() {
+uint8_t MessageClientText::getID() const {
     return MSG_CLIENT_TEXT;
 }
 
@@ -20,7 +20,7 @@ MessageClientText* MessageClientText::deserialize(const uint8_t* buffer, uint_t 
     uint_t pos = 0;
 
     /* make sure the type is correct */
-    if(buffer[pos++] != getID())
+    if(buffer[pos++] != MSG_CLIENT_TEXT)
         return nullptr;
 
     /* get the size of the message */

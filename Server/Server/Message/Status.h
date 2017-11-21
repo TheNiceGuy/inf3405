@@ -4,6 +4,17 @@
 #include "Message/SerializableObject.h"
 
 /**
+ * This enumeration defines the statuses returned from the server.
+ */
+enum status : uint8_t {
+    /** The last command executed with success. */
+    STATUS_OK = 0,
+
+    /** The client isn't authentificated. */
+    STATUS_NOT_AUTH = 1,
+};
+
+/**
  * This class defines a message containing a response status.
  */
 class MessageStatus : public SerializableObject {
@@ -19,13 +30,6 @@ public:
      * Destructor.
      */
     ~MessageStatus();
-
-    /**
-     * This method returns the unique ID of the class.
-     *
-     * @return The ID of the class.
-     */
-    static uint8_t getID();
 
     /**
      * This method deserializes a status message from a buffer.
@@ -53,6 +57,7 @@ public:
      * Overloaded method *
      *********************/
 
+    uint8_t getID() const;
     uint_t getSize() const;
     int serialize(uint8_t* buffer, uint_t size) const;
 private:

@@ -17,7 +17,7 @@ MessageServerText::~MessageServerText() {
 
 }
 
-uint8_t MessageServerText::getID() {
+uint8_t MessageServerText::getID() const {
     return MSG_SERVER_TEXT;
 }
 
@@ -25,7 +25,7 @@ MessageServerText* MessageServerText::deserialize(const uint8_t* buffer, uint_t 
     uint_t pos = 0;
 
     /* make sure the type is correct */
-    if(buffer[pos++] != getID()) return nullptr;
+    if(buffer[pos++] != MSG_SERVER_TEXT) return nullptr;
 
     /* get the address */
     if(size < pos+sizeof(uint32_t)) return nullptr;
@@ -69,6 +69,7 @@ MessageServerText* MessageServerText::deserialize(const uint8_t* buffer, uint_t 
     uint_t msgsize = buffer[pos++];
 
     /* get the message */
+    if(size < pos+msgsize) return nullptr;
     string msg((char*) &buffer[pos], msgsize);
     pos += msgsize;
 

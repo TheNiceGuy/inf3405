@@ -11,16 +11,18 @@ MessageQuit::~MessageQuit() {
 
 }
 
-uint8_t MessageQuit::getID() {
+uint8_t MessageQuit::getID() const {
     return MSG_QUIT;
 }
 
 MessageQuit* MessageQuit::deserialize(const uint8_t* buffer, uint_t size) {
     uint_t pos = 0;
 
+    /* this removes a warning */
+    if(size < 1) return nullptr;
+
     /* make sure the type is correct */
-    if(buffer[pos++] != getID())
-        return nullptr;
+    if(buffer[pos++] != MSG_QUIT) return nullptr;
 
     return new MessageQuit();
 }

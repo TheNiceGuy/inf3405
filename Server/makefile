@@ -3,7 +3,7 @@ EXEC := server
 SRCDIR := Server
 BUILD  := Build
 
-BASE_CCFLAGS := -Wall -Wextra -pedantic -std=c++11 -g -I./$(SRCDIR)
+BASE_CCFLAGS := -Wall -Wextra -pedantic -std=c++11 -g -I./$(SRCDIR) -fpermissive
 BASE_LDFLAGS :=
 
 LINUX_CC := g++
@@ -37,7 +37,6 @@ endif
 
 OBJECTS := $(BUILD)/Main.o \
            $(BUILD)/Client.o \
-           $(BUILD)/MessageTypes.o \
            $(BUILD)/Server.o \
            $(BUILD)/Utils.o \
            $(BUILD)/Database.o \
@@ -57,13 +56,7 @@ $(BUILD)/Main.o: $(SRCDIR)/Main.cpp
 
 $(BUILD)/Client.o: $(SRCDIR)/Client.cpp \
                    $(SRCDIR)/Client.h \
-                   $(SRCDIR)/MessageTypes.h \
                    $(SRCDIR)/Utils.h
-	$(CC) -o $@ -c $< $(CCFLAGS)
-
-$(BUILD)/MessageTypes.o: $(SRCDIR)/MessageTypes.cpp \
-                         $(SRCDIR)/MessageTypes.h \
-                         $(SRCDIR)/Utils.h
 	$(CC) -o $@ -c $< $(CCFLAGS)
 
 $(BUILD)/Server.o: $(SRCDIR)/Server.cpp \

@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 #include "User.h"
-#include "Message.h"
+#include "Message/ServerText.h"
 
 /**
  * This class defines the database of users and messages.
@@ -50,7 +50,7 @@ public:
      *
      * @param msg The new message to add.
      */
-    void addMsg(const Message& msg);
+    void addMsg(MessageServerText* msg);
 
     /**
      * This method adds a new user to the database.
@@ -61,6 +61,11 @@ public:
      * @return The user that has been created.
      */
     User* addUser(const std::string& name, const std::string& pass);
+
+    /**
+     * This method prints the database.
+     */
+    void print() const;
 
     /*************
      * Accessors *
@@ -101,7 +106,17 @@ private:
     std::vector<User*> users_;
 
     /** The list of messages that has been sent. */
-    std::vector<Message*> backlog_;
+    std::vector<MessageServerText*> backlog_;
+
+    /**
+     * This method adds a serializable object into the database. It can either
+     * be a user or a message.
+     *
+     * @param The serializable object.
+     *
+     * @return If the object was added, `true`, else `false`.
+     */
+    bool addSerializableObject(SerializableObject* obj);
 };
 
 #endif

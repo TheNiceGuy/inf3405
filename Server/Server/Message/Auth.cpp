@@ -13,7 +13,7 @@ MessageAuth::~MessageAuth() {
 
 }
 
-uint8_t MessageAuth::getID() {
+uint8_t MessageAuth::getID() const {
     return MSG_AUTH;
 }
 
@@ -21,7 +21,7 @@ MessageAuth* MessageAuth::deserialize(const uint8_t* buffer, uint_t size) {
     uint_t pos = 0;
 
     /* make sure the type is correct */
-    if(buffer[pos++] != getID())
+    if(buffer[pos++] != MSG_AUTH)
         return nullptr;
 
     /* get the size of the name */

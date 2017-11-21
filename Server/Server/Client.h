@@ -2,6 +2,9 @@
 #define CLIENT_H
 
 #include "Utils.h"
+#include "Server.h"
+#include "Message/Buffer.h"
+#include "Message/SerializableObject.h"
 
 #ifdef __LINUX__
     #include <sys/socket.h>
@@ -9,9 +12,6 @@
 #ifdef __WIN32__
     #include <winsock2.h>
 #endif
-
-#include "Server.h"
-#include "MessageTypes.h"
 
 /* server class prototype */
 class Server;
@@ -72,7 +72,7 @@ public:
      */
     thread_t getThread() const;
 
-    struct in_addr* getSocketAddr() const;
+    uint32_t getSocketAddr() const;
 
     uint32_t getSocketPort() const;
 
@@ -95,17 +95,9 @@ private:
     thread_t thread_;
 
     /** The buffer for reading data. */
-    struct msg_buffer buffer_;
+    Buffer<BUFFER_SIZE,-1> buffer_;
 
-    /**
-     * This method reads the socket and put the corresponding message inside
-     * the buffer of the client. By design, each call to this method guarantees
-     * that there will be a message ready to be process at the start of the
-     * buffer.
-     *
-     * @return If the read was successful, `true`, else `false`.
-     */
-    bool receiveMessage();
+    SerializableObject* receiveMessage();
 
     /**
      * This method waits for the client to authentificate.

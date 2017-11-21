@@ -1,14 +1,14 @@
 #ifndef USER_H
 #define USER_H
 
-#include "DatabaseObject.h"
+#include "Message/Auth.h"
 
 #include <string>
 
 /**
  * This class defines a user in the database.
  */
-class User : public DatabaseObject {
+class User : public MessageAuth {
 public:
     /**
      * Default constructor.
@@ -28,7 +28,7 @@ public:
      *
      * @param user A pointer to a user structure.
      */
-    User(const struct db_user* user);
+    User(const MessageAuth& user);
 
     /**
      * Destructor.
@@ -43,30 +43,6 @@ public:
      * @return If the password is valid, then `true`, else `false`.
      */
     bool validatePass(const std::string& pass) const;
-
-    /*************
-     * Accessors *
-     *************/
-
-    /**
-     * This method returns the name of the user.
-     *
-     * @return The name of the user.
-     */
-    std::string getName() const;
-
-    /**********************
-     * Overloaded methods *
-     **********************/
-
-    void serialize(uint8_t* buffer) const;
-
-private:
-    /** The name of the user. */
-    std::string name_;
-
-    /** The password of the user. */
-    std::string pass_;
 };
 
 #endif
