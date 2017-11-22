@@ -1,4 +1,5 @@
 #include "Utils.h"
+#include "Database.h"
 #include "Message/Buffer.h"
 #include "Message/Types.h"
 
@@ -11,10 +12,8 @@
     #include <unistd.h>
 #endif
 #ifdef __WIN32__
-#include <windows.h>
+    #include <windows.h>
 #endif
-
-#include "Database.h"
 
 using namespace std;
 
@@ -51,8 +50,8 @@ bool Database::load() {
     Buffer<BUFFER_SIZE,-1> buffer;
 
     /* open the file */
-    int fd = open(file_.c_str(), O_RDONLY);
-    if(fd < 0) {
+    FILE* fd = fopen(file_.c_str(), "r");
+    if(fd == nullptr) {
         cout << "The database file could not be read." << endl;
         return false;
     }
@@ -62,11 +61,11 @@ bool Database::load() {
     do {
         /* read some data */
         char* buf = (char*) buffer.getBuffer();
-        len = read(fd, &(buf[pos]), BUFFER_SIZE-pos);
+        len = fread(&(buf[pos]), sizeof(uint8_t), BUFFER_SIZE-pos, fd);
 
         /* make sure the read() call was sucessfull */
         if(len < 0) {
-            close(fd);
+            fclose(fd);
             return false;
         }
 
@@ -102,7 +101,7 @@ bool Database::load() {
     } while(len > 0);
 
     /* close the file */
-    close(fd);
+    fclose(fd);
 
     return true;
 }
