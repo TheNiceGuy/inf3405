@@ -4,10 +4,11 @@
 #ifdef __LINUX__
     #include <sys/socket.h>
 #endif
-
 #ifdef __WIN32__
 
 #endif
+#include <thread>
+#include <mutex>
 
 #include <vector>
 #include "Database.h"
@@ -74,6 +75,10 @@ public:
      */
     bool sendText(Client* client, const std::string& msg);
 
+    void unregister(Client* client);
+
+    void getBacklog(Client* client);
+
 private:
     /** A flag that tells whether the server is running or not. */
     bool running_;
@@ -94,7 +99,7 @@ private:
     std::vector<Client*> clients_;
 
     /** The mutex used to syncronize the database. */
-    mutex_t mutex_;
+    std::mutex mutex_;
 };
 
 #endif

@@ -87,6 +87,13 @@ public:
      */
     std::string getFile() const;
 
+    /**
+     * This method returns the backlog.
+     *
+     * @return The backlog.
+     */
+    std::vector<MessageServerText*> getBacklog() const;
+
     /************
      * Mutators *
      ************/

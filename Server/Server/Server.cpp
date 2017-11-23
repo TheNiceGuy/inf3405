@@ -20,6 +20,7 @@
 #endif
 #include <exception>
 #include <system_error>
+#include <algorithm>
 #include <time.h>
 
 #include "Server.h"
@@ -105,23 +106,6 @@ Server::Server(const string& db, const string& addr, uint_t port) :
         closesocket(socket_);
         WSACleanup();
         throw runtime_error("listen() failed: error " + to_string(code));
-    }
-#endif
-
-    /* create the mutex for syncronisation */
-#ifdef __LINUX__
-    if(pthread_mutex_init(&mutex_, NULL) < 0) {
-        close(socket_);
-        throw runtime_error("pthread_mutex_init() failed: error " + to_string(errno));
-    }
-#endif
-#ifdef __WIN32__
-    mutex_ = CreateMutex(NULL, FALSE, NULL);
-    if (mutex_ == NULL) {
-        int code = GetLastError();
-        closesocket(socket_);
-        WSACleanup();
-        throw runtime_error("CreateMutex() failed: error " + to_string(code));
     }
 #endif
 }
@@ -212,6 +196,10 @@ bool Server::authentificate(const string& name, const string& pass) {
 
     /* check if another client is connected with that account */
     for(Client* c : clients_) {
+        /* make sure the client is authentificated */
+        if(c->isAuth())
+            continue;
+
         /* prevent null pointers */
         if(c == nullptr)
             continue;
@@ -224,21 +212,19 @@ bool Server::authentificate(const string& name, const string& pass) {
     return true;
 }
 
+void Server::getBacklog(Client* client) {
+    vector<MessageServerText*> backlog = db_.getBacklog();
+
+    mutex_.lock();
+    for(MessageServerText* text : backlog) {
+        client->queue(text);
+    }
+    mutex_.unlock();
+}
+
 bool Server::sendText(Client* client, const string& msg) {
     /* lock the mutex since we only handle one message at a time */
-#ifdef __LINUX__
-    int err = pthread_mutex_lock(&mutex_);
-    if(err != 0) {
-        cout << "pthread_mutex_lock() failed: error " << err << endl;
-        return false;
-    }
-#endif
-#ifdef __WIN32__
-    if(WaitForSingleObject(mutex_, INFINITE) == WAIT_FAILED) {
-        cout << "WaitForSingleObject() failed: error " << GetLastError() << endl;
-        return false;
-    }
-#endif
+    mutex_.lock();
 
     /* get message informations */
     time_t timestamp = time(0);
@@ -250,33 +236,21 @@ bool Server::sendText(Client* client, const string& msg) {
     MessageServerText* text;
     text = new MessageServerText(username, timestamp, addr, port, msg);
 
-    /* serialize the message */
-    uint8_t buffer[BUFFER_SIZE];
-    int len = text->serialize(buffer, BUFFER_SIZE);
-
     /* we send the message to other client */
     for (Client* c : clients_) {
-        /* make sure we're not sending the message back to the same client */
-        if (c == client)
+        /* make sure the client is authentificated */
+        if(!c->isAuth())
             continue;
 
-        /* send the message to the other clients */
-        c->sendMessage(&buffer, len);
+        /* send the message to the other clients, including the sender */
+        c->queue(text);
     }
 
     /* write the new message into the backlog */
     db_.addMsg(text);
 
     /* release the mutex */
-#ifdef __LINUX__
-    err = pthread_mutex_unlock(&mutex_);
-    if(err != 0)
-        cout << "pthread_mutex_unlock() failed: error " << err << endl;
-#endif
-#ifdef __WIN32__
-    if(ReleaseMutex(mutex_) == 0)
-        cout << "ReleaseMutex() failed: error " << GetLastError() << endl;
-#endif
+    mutex_.unlock();
 
     return true;
 }

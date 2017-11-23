@@ -47,8 +47,6 @@ bool Database::init() {
 }
 
 bool Database::load() {
-    Buffer<BUFFER_SIZE,-1> buffer;
-
     /* open the file */
     FILE* fd = fopen(file_.c_str(), "r");
     if(fd == nullptr) {
@@ -56,50 +54,23 @@ bool Database::load() {
         return false;
     }
 
-    uint_t pos = 0;
-    int len;
-    do {
-        /* read some data */
-        char* buf = (char*) buffer.getBuffer();
-        len = fread(&(buf[pos]), sizeof(uint8_t), BUFFER_SIZE-pos, fd);
+    /* create a buffer for reading the file */
+    FileBuffer<BUFFER_SIZE,-1> buffer(fd);
 
-        /* make sure the read() call was sucessfull */
-        if(len < 0) {
-            fclose(fd);
-            return false;
-        }
+    while(true) {
+        /* read an object */
+        SerializableObject* obj = buffer.getMessage();
+        if(obj == nullptr)
+            break;
 
-        /**
-         * FIXME: This can be optimized in order to reduce the number of calls
-         *        to the rewind() method.
-         */
+        /* add the object into the database */
+        bool status = addSerializableObject(obj);
 
-        int size = pos+len;
-        while(true) {
-            /* deserialize the data that has been read */
-            SerializableObject* obj = nullptr;
-            obj = SerializableObject::deserialize(buffer.getBuffer(), size);
-
-            /* check if something could be deserialized */
-            if(obj == nullptr)
-                break;
-
-            /* rewind the buffer */
-            buffer.rewind(obj->getSize());
-            size -= obj->getSize();
-
-            /* add the object into the database */
-            bool status = addSerializableObject(obj);
-
-            /* delete the object if it wasn't added into the database */
-            if(status == false)
-                delete obj;
-        }
-
-        /* update the reading position */
-        pos = size;
-    } while(len > 0);
-
+        /* delete the object if it wasn't added into the database */
+        if(status == false)
+            delete obj;
+    }
+    
     /* close the file */
     fclose(fd);
 
@@ -179,6 +150,10 @@ User* Database::getUser(const string& name) const {
 
 string Database::getFile() const {
 	return file_;
+}
+
+std::vector<MessageServerText*> Database::getBacklog() const {
+    return backlog_;
 }
 
 void Database::setFile(const string& file) {

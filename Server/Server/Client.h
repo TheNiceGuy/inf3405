@@ -4,7 +4,7 @@
 #include "Utils.h"
 #include "Server.h"
 #include "Message/Buffer.h"
-#include "Message/SerializableObject.h"
+#include "Message/ServerText.h"
 
 #ifdef __LINUX__
     #include <sys/socket.h>
@@ -12,6 +12,61 @@
 #ifdef __WIN32__
     #include <winsock2.h>
 #endif
+#include <iostream>
+#include <deque>
+#include <thread>
+#include <mutex>
+
+class Logger {
+public:
+    /**
+     * Default constructor.
+     */
+    Logger() {
+
+    }
+
+    /**
+     * The constructor by values.
+     *
+     * @param prefix The prefix of the logger.
+     */
+    Logger(const std::string prefix){
+        prefix_ = prefix;
+    }
+
+    /**
+     * The destructor.
+     */
+    ~Logger() {
+
+    }
+
+    /************
+     * Mutators * 
+     ************/
+
+    /**
+     * This method sets the prefix of the logger.
+     *
+     * @param prefix The prefix of the logger.
+     */
+    void setPrefix(const std::string& prefix) {
+        prefix_ = prefix;
+    }
+
+    /**********************
+     * Overloaded methods *
+     **********************/
+
+    void operator()(const std::string& os) {
+        std::cout << prefix_ << os << std::endl;
+    }
+
+private:
+    /** The prefix of the logger. */
+    std::string prefix_;
+};
 
 /* server class prototype */
 class Server;
@@ -39,12 +94,14 @@ public:
     /**
      * This method sends data to the remote user.
      *
-     * @param msg  The data to send.
-     * @param size The size of the data.
+     * @param obj The object to send.
      *
      * @return If the message was sent successfully, 'true', else 'false'.
      */
-    bool sendMessage(void* msg, uint_t size);
+    bool sendMessage(const SerializableObject& obj);
+
+
+    void queue(MessageServerText* msg);
 
     /*************
      * Accessors *
@@ -70,11 +127,13 @@ public:
      *
      * @return The thread handle.
      */
-    thread_t getThread() const;
+    const std::thread& getThread() const;
 
     uint32_t getSocketAddr() const;
 
     uint32_t getSocketPort() const;
+
+    bool isAuth() const;
 
 private:
     /** The name of the user connected. */
@@ -88,16 +147,21 @@ private:
 
     struct sockaddr addr_;
 
-    /** The ID of the client thread. */
-    tid_t threadID_;
-
     /** The thread of the client. */
-    thread_t thread_;
+    std::thread thread_;
+
+    std::mutex mutex_;
 
     /** The buffer for reading data. */
-    Buffer<BUFFER_SIZE,-1> buffer_;
+    NetworkBuffer<BUFFER_SIZE,-1> buffer_;
+
+    std::deque<MessageServerText*> queue_;
 
     SerializableObject* receiveMessage();
+
+    Logger logger_;
+
+    bool auth_;
 
     /**
      * This method waits for the client to authentificate.
@@ -115,6 +179,8 @@ private:
      * @return If a message was received, `true`, else `false`.
      */
     bool waitMessage();
+
+    void sendQueuedMessages();
 };
 
 #endif

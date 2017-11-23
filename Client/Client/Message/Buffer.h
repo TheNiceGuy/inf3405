@@ -172,8 +172,8 @@ private:
 /**
  * This class is used for reading serializable messages from a socket.
  *
- * @tparam SIZE The size of the internal buffer.
- * @tparam ZERO The default value of the buffer.
+ * @tparam SIZE    The size of the internal buffer.
+ * @tparam ZERO    The default value of the buffer.
  */
 template <int SIZE, uint8_t ZERO>
 class NetworkBuffer : public Buffer<SIZE, ZERO> {

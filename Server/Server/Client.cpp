@@ -1,6 +1,5 @@
-#include <iostream>
-
 #include "Utils.h"
+#include "Client.h"
 #include "Message/Types.h"
 #include "Message/Auth.h"
 #include "Message/Status.h"
@@ -10,28 +9,25 @@
     #include <unistd.h>
     #include <sys/socket.h>
     #include <netinet/in.h>
+    #include <poll.h>
 #endif
 #ifdef __WIN32__
     #include <winsock2.h>
     #include <ws2tcpip.h>
     #include <windows.h>
 #endif
-
-#include "Client.h"
+#include <iostream>
 
 using namespace std;
 
-#ifdef __LINUX__
-void* threadEntryPoint(void* data);
-#endif
-#ifdef __WIN32__
-DWORD WINAPI threadEntryPoint(LPVOID data);
-#endif
+void threadEntryPoint(Client* client);
 
-Client::Client(Server* server, socket_t socket) {
+Client::Client(Server* server, socket_t socket) :
+    buffer_(socket) {
     name_   = string();
     server_ = server;
     socket_ = socket;
+    auth_   = false;
 
     /* get the client's IP address */
     socklen_t len = sizeof(addr_);
@@ -39,43 +35,116 @@ Client::Client(Server* server, socket_t socket) {
         cout << "getpeername() failed: error" << errno << endl;
 
     /* create the thread */
-#ifdef __LINUX__
-    pthread_create(&thread_, NULL, threadEntryPoint, this);
-#endif
-#ifdef __WIN32__
-    thread_ = CreateThread(NULL, 0, threadEntryPoint, this, 0, &threadID_);
-#endif
+    thread_ = thread(threadEntryPoint, this);
 }
 
 void Client::handleClient() {
-#ifdef __LINUX__
-    /* set the thread ID */
-    threadID_ = getpid();
-#endif
+    /* get the thread ID */
+    size_t id = hash<thread::id>{}(this_thread::get_id());
+
+    /* update the logger's prefix */
+    logger_.setPrefix("Thread " + to_string(id) + ": ");
 
     /* wait for the authentification of the client */
     if(!waitAuthentification()) {
-        cout << "Authentification failed" << endl;
+        logger_("authentification failed");
         return;
     }
 
+    server_->getBacklog(this);
+
+    /* set the recv() timeout of the socket */
+#ifdef __LINUX__
+    struct timeval tv;
+    tv.tv_sec  =  0;
+    tv.tv_usec = 10;
+    setsockopt(socket_, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+#endif
+#ifdef __WIN32__
+#endif
+
+    /* configure the polling structure */
+    struct pollfd pollsocket;
+    pollsocket.fd = socket_;
+    pollsocket.events = POLLIN;
+
     /* wait for messages */
-    while(waitMessage());
+    while(true) {
+#ifdef __LINUX__
+        /* wait for data */
+        int ret = poll(&pollsocket, 1, 2000);
+
+        /* send queued messages if possible */
+        sendQueuedMessages();
+
+        /* no data is ready to read */
+        if(ret < 0)
+            continue;
+#endif
+#ifdef __WIN32__
+#endif
+        waitMessage();
+
+        char temp;
+        ssize_t isconnected = recv(socket_, &temp, 1, MSG_PEEK);
+        if(isconnected == 0) {
+            logger_("socket closed");
+            break;
+        }
+    }
+
+    /* remove the client from the server */
+    auth_ = false;
 }
 
-bool Client::sendMessage(void* msg, uint_t size) {
-    return !(send(socket_, (char*) msg, size, 0) < 0);
+bool Client::sendMessage(const SerializableObject& obj) {
+    uint8_t buffer[BUFFER_SIZE];
+
+    /* serialize the message */
+    int len = obj.serialize(buffer, BUFFER_SIZE);
+    if(len < 0) {
+        logger_("failed to serialize the message");
+        return false;
+    }
+
+    /* send the message */
+    len = send(socket_, (char*) buffer, len, 0);
+    if(len < 0) {
+        logger_("send() failed with error " + errno);
+        return false;
+    }
+
+    return true;
+}
+
+void Client::sendQueuedMessages() {
+    while(!queue_.empty()) {
+        /* get the next messages */
+        mutex_.lock();
+        MessageServerText* msg = queue_.front();
+        queue_.pop_front();
+        mutex_.unlock();
+
+        /* that shouldn't happen */
+        if(msg == nullptr)
+            continue;
+
+        /* send the message */
+        sendMessage(*msg);
+    }
+}
+
+void Client::queue(MessageServerText* msg) {
+    mutex_.lock();
+    queue_.push_back(msg);
+    mutex_.unlock();
 }
 
 string Client::getName() const {
     return name_;
 }
 
-tid_t Client::getThreadID() const {
-    return threadID_;
-}
-
-thread_t Client::getThread() const {
+const thread& Client::getThread() const {
     return thread_;
 }
 
@@ -94,31 +163,19 @@ uint32_t Client::getSocketPort() const {
     return (uint32_t) addr->sin_port;
 }
 
-SerializableObject* Client::receiveMessage() {
-    /* read data from the buffer */
-    ssize_t len = recv(socket_, (char*) buffer_.getBuffer(), buffer_.getSize(), 0);
-    if(len < 0) {
-        cout << "recv() failed: error " << errno << endl;
-        return nullptr;
-    }
-
-    /* get the message */
-    SerializableObject* msg = buffer_.getMessage(len);
-    buffer_.rewind(msg->getSize());
-
-    return msg;
+bool Client::isAuth() const {
+    return auth_;
 }
 
 bool Client::waitAuthentification() {
     /* receive the next message */
-    SerializableObject* msg = receiveMessage();
-    if(msg == nullptr) {
-        delete msg;
+    SerializableObject* msg = buffer_.getMessage();
+    if(msg == nullptr)
         return false;
-    }
 
     /* make sure the message is an authentification */
     if(msg->getID() != MSG_AUTH) {
+        logger_("unexpected message during authentification");
         delete msg;
         return false;
     }
@@ -129,24 +186,29 @@ bool Client::waitAuthentification() {
     /* extract the name and the password */
     string name = auth->getName();
     string pass = auth->getPass();
+    logger_("trying authentification with " + name + " and " + pass);
 
     /* try the authentification */
     if(!server_->authentificate(name, pass)) {
+        logger_("authentification failed");
+        MessageStatus status(STATUS_NOT_AUTH);
+        sendMessage(status);
         delete msg;
         return false;
     }
 
     /* respond to the client that the authentification worked */
-    uint8_t buffer[BUFFER_SIZE];
     MessageStatus status(STATUS_OK);
-    int len = status.serialize(buffer, BUFFER_SIZE);
-    if(sendMessage(buffer, len)) {
+    if(!sendMessage(status)) {
+        logger_("failled to send authentification message");
         delete msg;
         return false;
     }
+    logger_("authentification was sucessful");
 
     /* update the user name */
     name_ = name;
+    auth_ = true;
 
     /* authentification was a success */
     delete msg;
@@ -155,14 +217,17 @@ bool Client::waitAuthentification() {
 
 bool Client::waitMessage() {
     /* receive the next message */
-    SerializableObject* msg = receiveMessage();
-    if(msg == nullptr) {
-        delete msg;
+    SerializableObject* msg = buffer_.getMessage();
+    if(msg == nullptr)
         return false;
-    }
 
     /* make sure the message contains text */
     if(msg->getID() != MSG_CLIENT_TEXT) {
+        logger_("unexpected message");
+
+        MessageStatus error(STATUS_NOT_OK);
+        sendMessage(error);
+
         delete msg;
         return false;
     }
@@ -170,18 +235,15 @@ bool Client::waitMessage() {
     /* extract the text */
     MessageClientText* text = static_cast<MessageClientText*>(msg);
     string message = text->getMessage();
+    logger_("MESSAGE " + message);
 
     /* send the text to the other clients */
     if(!server_->sendText(this, message)) {
-        delete msg;
-        return false;
-    }
+        logger_("failed to send message to the server");
 
-    /* respond to the client that the message was sent */
-    uint8_t buffer[BUFFER_SIZE];
-    MessageStatus status(STATUS_OK);
-    int len = status.serialize(buffer, BUFFER_SIZE);
-    if(sendMessage(buffer, len)) {
+        MessageStatus error(STATUS_NOT_OK);
+        sendMessage(error);
+
         delete msg;
         return false;
     }
@@ -191,17 +253,11 @@ bool Client::waitMessage() {
     return true;
 }
 
-#ifdef __LINUX__
-void* threadEntryPoint(void* data) {
-#endif
-#ifdef __WIN32__
-DWORD WINAPI threadEntryPoint(LPVOID data) {
-#endif
-    /* get the client */
-    Client* client = (Client*) data;
+void threadEntryPoint(Client* client) {
+    /* make sure we didn't get a null pointer */
+    if(client == nullptr)
+        return;
 
     /* handle the client's requests */
     client->handleClient();
-
-    return 0;
 }
