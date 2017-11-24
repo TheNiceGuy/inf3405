@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "Utils.h"
+#include "Server.h"
 #include "Message/ServerText.h"
 
 #ifdef __LINUX__
@@ -20,10 +21,7 @@
 #endif
 #include <exception>
 #include <system_error>
-#include <algorithm>
 #include <time.h>
-
-#include "Server.h"
 
 using namespace std;
 
@@ -76,7 +74,7 @@ Server::Server(const string& db, const string& addr, uint_t port) :
 #endif
 
     /* bind the listening socket to the address */
-    int ret = bind(socket_, (sockaddr*)& service, sizeof(service));
+    int ret = ::bind(socket_, (sockaddr*)& service, sizeof(service));
 #ifdef __LINUX__
     if(ret < 0) {
         close(socket_);

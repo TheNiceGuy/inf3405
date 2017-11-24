@@ -1,6 +1,9 @@
 #ifndef SERVER_H
 #define SERVER_H
 
+#include "Database.h"
+#include "Client.h"
+
 #ifdef __LINUX__
     #include <sys/socket.h>
 #endif
@@ -9,10 +12,7 @@
 #endif
 #include <thread>
 #include <mutex>
-
 #include <vector>
-#include "Database.h"
-#include "Client.h"
 
 /* client class prototype */
 class Client;

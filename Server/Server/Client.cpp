@@ -58,10 +58,11 @@ void Client::handleClient() {
     struct timeval tv;
     tv.tv_sec  =  0;
     tv.tv_usec = 10;
-    setsockopt(socket_, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
 #endif
 #ifdef __WIN32__
+	DWORD tv = 10;
 #endif
+	setsockopt(socket_, SOL_SOCKET, SO_RCVTIMEO, (char*) &tv, sizeof(tv));
 
     /* configure the polling structure */
     struct pollfd pollsocket;
@@ -70,9 +71,13 @@ void Client::handleClient() {
 
     /* wait for messages */
     while(true) {
+		/* wait for data */
 #ifdef __LINUX__
-        /* wait for data */
         int ret = poll(&pollsocket, 1, 2000);
+#endif
+#ifdef __WIN32__
+		int ret = WSAPoll(&pollsocket, 1, 1);
+#endif
 
         /* send queued messages if possible */
         sendQueuedMessages();
@@ -80,9 +85,7 @@ void Client::handleClient() {
         /* no data is ready to read */
         if(ret < 0)
             continue;
-#endif
-#ifdef __WIN32__
-#endif
+
         waitMessage();
 
         char temp;

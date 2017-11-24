@@ -4,6 +4,9 @@
 #ifdef __LINUX__
     #include <csignal>
 #endif
+#ifdef __LINUX__
+	#pragma comment(lib, "ws2_32.lib")
+#endif
 #include <iostream>
 #include <string>
 
@@ -105,14 +108,24 @@ void testDatabase(const string& file);
 /** The server object. */
 static Server* server = nullptr;
 
+#ifdef __LINUX__
+#define RETURN_VALUE 
 void sigint_handler(int signal) {
+#endif
+#ifdef __WIN32__
+#define RETURN_VALUE true
+BOOL WINAPI sigint_handler(DWORD signal) {
+#endif
     /* make sure the server have been created */
     if(server == nullptr)
-        return;
+        return RETURN_VALUE;
 
     /* shutdown the server */
     server->stop();
+
+	return RETURN_VALUE;
 }
+#undef RETURN_VALUE
 
 int main(int argc, char** argv) {
     /* get the executable */
@@ -192,7 +205,12 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+#ifdef __LINUX__
     signal(SIGINT, sigint_handler);
+#endif
+#ifdef __WIN32__
+	SetConsoleCtrlHandler(sigint_handler, TRUE);
+#endif
 
     /* initialise the server */
     try {

@@ -51,7 +51,7 @@ uint_t stou(const string& str, size_t* idx, int base) {
     unsigned long result = std::stoul(str, idx, base);
 
     /* make sure it is positive */
-    if (result > numeric_limits<unsigned>::max())
+    if (result > (numeric_limits<unsigned>::max)())
         throw out_of_range("stou");
 
     return result;
