@@ -104,7 +104,7 @@ Server::Server(const string& db, const string& addr, uint_t port) :
 Server::~Server() {
 	/* close the socket */
 #ifdef __LINUX__
-	close(Socket);
+	close(socket_);
 #endif
 #ifdef __WIN32__
 	closesocket(socket_);

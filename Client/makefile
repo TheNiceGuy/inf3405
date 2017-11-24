@@ -8,7 +8,7 @@ BASE_LDFLAGS :=
 
 LINUX_CC := g++
 LINUX_LD := g++
-LINUX_CCFLAGS := $(BASE_CCFLAGS) -D__LINUX__ -D__DEBUG__2
+LINUX_CCFLAGS := $(BASE_CCFLAGS) -D__LINUX__
 LINUX_LDFLAGS := $(BASE_LDFLAGS) -lpthread -lncurses
 
 WIN32_CC := x86_64-w64-mingw32-g++

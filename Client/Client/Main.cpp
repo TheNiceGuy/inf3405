@@ -4,6 +4,8 @@
 
 #ifdef __LINUX__
     #include <unistd.h>
+    #include <sys/types.h>
+    #include <pwd.h>
 #endif
 #ifdef __WIN32__
 	#include <windows.h>
@@ -194,7 +196,8 @@ int main(int argc, char** argv) {
     if(user == nullptr) {
         cout << "Using system's username." << endl;
 #ifdef __LINUX__
-        user = getlogin();
+        struct passwd* passwd = getpwuid(getuid());
+        user = passwd->pw_name;
 #endif
 #ifdef __WIN32__
 		char usernamebuf[100];
