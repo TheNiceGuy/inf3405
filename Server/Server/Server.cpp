@@ -22,6 +22,7 @@
 #include <exception>
 #include <system_error>
 #include <time.h>
+#include <algorithm>
 
 using namespace std;
 
@@ -50,14 +51,6 @@ Server::Server(const string& db, const string& addr, uint_t port) :
     /* load the database */
     if(!db_.init())
         throw invalid_argument("could not load the database file");
-
-#ifdef __WIN32__
-    /* start the WINSOCK API */
-    WSADATA wsaData;
-    int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
-    if (result != NO_ERROR)
-        throw runtime_error("WSAStartup() failed: error " + to_string(result));
-#endif
 
     /* create the listening socket */
     socket_ = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -109,7 +102,17 @@ Server::Server(const string& db, const string& addr, uint_t port) :
 }
 
 Server::~Server() {
-    /* TODO: cleanup*/
+	/* close the socket */
+#ifdef __LINUX__
+	close(Socket);
+#endif
+#ifdef __WIN32__
+	closesocket(socket_);
+#endif
+
+	/* save the database */
+	cout << "Saving the database..." << endl;
+	db_.save();
 }
 
 void Server::waitConnexion() {
@@ -117,8 +120,8 @@ void Server::waitConnexion() {
 
     /* configure the structure for polling the socket */
     struct pollfd pollsocket;
-    pollsocket.fd = socket_;
-    pollsocket.events = POLLIN;
+    pollsocket.fd     = socket_;
+    pollsocket.events = POLLRDNORM;
 
     /* set the server as running */
     running_ = true;
@@ -127,11 +130,15 @@ void Server::waitConnexion() {
     while(running_) {
         /* wait for new connexions */
 #ifdef __LINUX__
-        int ret = poll(&pollsocket, 1, -1);
+        int ret = poll(&pollsocket, 1, 1);
 #endif
 #ifdef __WIN32__
-        int ret = WSAPoll(&pollsocket, 1, -1);
+        int ret = WSAPoll(&pollsocket, 1, 1);
 #endif
+		/* poll timeout */
+		if(ret == 0) continue;
+
+		/* poll error */
         if(ret < 0) {
             /* if a signal was caught, it might be CTRL+C */
 #ifdef __LINUX__
@@ -167,8 +174,16 @@ void Server::waitConnexion() {
         Client* client = new Client(this, socket);
 
         /* add the new client into the list */
+		mutex_.lock();
         clients_.push_back(client);
+		mutex_.unlock();
     }
+}
+
+void Server::unregister(Client* client) {
+	mutex_.lock();
+	clients_.erase(std::remove(clients_.begin(), clients_.end(), client), clients_.end());
+	mutex_.unlock();
 }
 
 void Server::stop() {

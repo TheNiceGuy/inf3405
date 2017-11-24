@@ -180,7 +180,7 @@ private:
      */
     bool waitMessage();
 
-    void sendQueuedMessages();
+    bool sendQueuedMessages();
 };
 
 #endif

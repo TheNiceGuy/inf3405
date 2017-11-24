@@ -147,7 +147,7 @@ void Client::checkSocket() {
     /* configure the polling structure */
     struct pollfd pollsocket;
     pollsocket.fd     = socket_;
-    pollsocket.events = POLLPRI;
+    pollsocket.events = POLLRDNORM;
 
     while(running_) {
         /* wait for the main thread to process the data */
@@ -170,7 +170,7 @@ void Client::checkSocket() {
             if(result > 0) break;
             if(!running_) return;
         }
-
+		
         /* lock the mutex for the type variable */
         mutexType_.lock();
         type_ = 1;
@@ -207,7 +207,7 @@ bool Client::getSocket() {
 
     /* make sure there was an object */
     if(obj == nullptr)
-        return false;;
+        return false;
 
     /* it's supposed to be a server message */
     if(obj->getID() != MSG_SERVER_TEXT) {
@@ -234,12 +234,15 @@ void Client::mainLoop(const string& user, const string& pass) {
     struct timeval tv;
     tv.tv_sec  = 0;
     tv.tv_usec = 10;
-    
 #endif
 #ifdef __WIN32__
 	DWORD tv = 10;
 #endif
 	setsockopt(socket_, SOL_SOCKET, SO_RCVTIMEO, (char*) &tv, sizeof(tv));
+
+	/* get backlog if any */
+	this_thread::sleep_for(chrono::seconds(1));
+	while(getSocket());
 
     /* start the threads */
     running_ = true;
@@ -254,9 +257,6 @@ void Client::mainLoop(const string& user, const string& pass) {
     unique_lock<mutex> lock(mutex_);
     while(true) {
         event_.wait(lock);
-
-
-        WINDOW_DEBUG("test");
 
         bool status;
         if(type_ == 0) {

@@ -4,11 +4,21 @@
 #ifdef __LINUX__
     #include <csignal>
 #endif
-#ifdef __LINUX__
+#ifdef __WIN32__
+	#include <windows.h>
+
 	#pragma comment(lib, "ws2_32.lib")
+	#pragma comment(lib, "shlwapi.lib")
 #endif
 #include <iostream>
 #include <string>
+
+#ifdef __LINUX__
+	#define EXIT(STATUS) {return (STATUS);}
+#endif
+#ifdef __WIN32__
+	#define EXIT(STATUS) {system("pause"); return (STATUS);}
+#endif
 
 using namespace std;
 
@@ -24,11 +34,16 @@ static const char* addr = nullptr;
 /** The listening port if specified by the user. */
 static const char* port = nullptr;
 
+/** Whether to prompt the user for the settings. */
+static bool prompt = true;
+
 /** Whether the user wants to see the help message. */
 static bool showhelp = false;
 
-/** Whether the user wants to see the help message. */
+#ifdef __DEBUG__
+/** The test to run. */
 static string test = string("none");
+#endif
 
 /** Whether the command parsing failed or not. */
 static bool fail = false;
@@ -38,16 +53,22 @@ void showHelp() {
     cout << "This command starts the chat server." << endl;
     cout << endl;
     cout << "The following arguments are valid:" << endl;
+	cout << "  --nopromt                       " << "don't prompt for settings" << endl;
     cout << "  --database FILE                 " << "specify the database file" << endl;
     cout << "  --addr ADDRESS                  " << "specify the listening address" << endl;
     cout << "  --port PORT                     " << "specify the listening port" << endl;
     cout << "  --help                          " << "show this help" << endl;
-    cout << "  --test MODULE                   " << "test a part of this program" << endl;
+#ifdef __DEBUG__
+	cout << "  --test MODULE                   " << "test a part of this program" << endl;
+#endif
 }
 
 char** parseLongCommands(char** cmds, char** last) {
     /* parse a long argument */
-    if(string("--database").compare(cmds[0]) == 0) {
+	if (string("--nopromt").compare(cmds[0]) == 0) {
+		/* disable prompting the configuration */
+		prompt = false;
+	} else if (string("--database").compare(cmds[0]) == 0) {
         /* make sure the filename is specified */
         if(++cmds == last) {
             cout << "Missing filename for \"--database\" argument." << endl;
@@ -77,6 +98,7 @@ char** parseLongCommands(char** cmds, char** last) {
 
         /* copy the filename  */
         port = cmds[0];
+#ifdef __DEBUG__
     } else if(string("--test").compare(cmds[0]) == 0) {
         /* make sure the port is specified */
         if(++cmds == last) {
@@ -87,6 +109,7 @@ char** parseLongCommands(char** cmds, char** last) {
 
         /* copy the filename  */
         test = string(cmds[0]);
+#endif
     } else if(string("--help").compare(cmds[0]) == 0) {
         /* the user requested the help */
         showhelp = true;
@@ -98,12 +121,14 @@ char** parseLongCommands(char** cmds, char** last) {
     return cmds;
 }
 
+#ifdef __DEBUG__
 /**
  * This method test the database.
  *
  * @param file The database file.
  */
 void testDatabase(const string& file);
+#endif
 
 /** The server object. */
 static Server* server = nullptr;
@@ -115,7 +140,10 @@ void sigint_handler(int signal) {
 #ifdef __WIN32__
 #define RETURN_VALUE true
 BOOL WINAPI sigint_handler(DWORD signal) {
+	if (signal != CTRL_C_EVENT)
+		return RETURN_VALUE;
 #endif
+
     /* make sure the server have been created */
     if(server == nullptr)
         return RETURN_VALUE;
@@ -126,6 +154,24 @@ BOOL WINAPI sigint_handler(DWORD signal) {
 	return RETURN_VALUE;
 }
 #undef RETURN_VALUE
+
+string strAddr;
+string strPort;
+string strDatabase;
+void promptSettings() {
+	cout << "Configuring the server... (empty means default)" << endl;
+	cout << "\tPlease enter the binding address: ";
+	getline(cin, strAddr);
+	if(!strAddr.empty()) addr = strAddr.c_str();
+
+	cout << "\tPlease enter the binding port: ";
+	getline(cin, strPort);
+	if(!strPort.empty()) port = strPort.c_str();
+
+	cout << "\tPlease enter the database file: ";
+	getline(cin, strDatabase);
+	if(!strDatabase.empty()) database = strDatabase.c_str();
+}
 
 int main(int argc, char** argv) {
     /* get the executable */
@@ -146,19 +192,23 @@ int main(int argc, char** argv) {
             continue;
         }
 
-        /* parse the command */
+        /* parse the cyommand */
         cmds = parseLongCommands(cmds, argv);
     }
 
     /* show help if specified */
     if(showhelp) {
         showHelp();
-        return 1;
+        EXIT(1);
     }
 
     /* check if the parsing failed */
     if(fail)
-        return 1;
+		EXIT(1);
+
+	/* prompt for the server's settings */
+	if(prompt)
+		promptSettings();
 
     /* check if a database file was specified */
     if(database == nullptr) {
@@ -178,17 +228,19 @@ int main(int argc, char** argv) {
         port = "5025";
     }
 
+#ifdef __DEBUG__
     /* check if the user wants to run some test */
     if(test != "none") {
         if(test == "database") {
             testDatabase(database);
         } else {
             cout << "Unsupported module for testing." << endl;
-            return 1;
+			EXIT(1);
         }
 
-        return 0;
+		EXIT(0);
     }
+#endif
 
     /* print current configuration */
     cout << "Starting the server using the following options:" << endl;
@@ -202,7 +254,7 @@ int main(int argc, char** argv) {
         fport = stou(port);
     } catch(const exception& ex) {
         cout << "Error: the specified port isn't valid" << endl;
-        return 1;
+		EXIT(1);
     }
 
 #ifdef __LINUX__
@@ -210,6 +262,12 @@ int main(int argc, char** argv) {
 #endif
 #ifdef __WIN32__
 	SetConsoleCtrlHandler(sigint_handler, TRUE);
+#endif
+
+#ifdef __WIN32__
+	/* start the WINSOCK API */
+	WSADATA wsaData;
+	int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
 #endif
 
     /* initialise the server */
@@ -220,11 +278,17 @@ int main(int argc, char** argv) {
         cout << e.what() << endl;
     }
 
+#ifdef __WIN32__
+	/* stop the WINSOCK API */
+	WSACleanup();
+#endif
+
     delete server;
 
-    return 0;
+	EXIT(0);
 }
 
+#ifdef __DEBUG__
 void testDatabase(const string& file) {
     Database db(file);
     db.init();
@@ -239,5 +303,5 @@ void testDatabase(const string& file) {
     db.addUser("user3", "1234567890");
 
     db.save();
-
 }
+#endif

@@ -13,6 +13,7 @@
 #endif
 #ifdef __WIN32__
     #include <windows.h>
+	#include <shlwapi.h>
 #endif
 
 using namespace std;
@@ -35,14 +36,19 @@ Database::~Database() {
 
 bool Database::init() {
 	/* start with an empty database if the file doesn't exist */
-	if(!fileExists(file_))
+	if(!fileExists(file_)) {
+		cout << "Database file \'" << file_ << "\' doesn't exist, creating a new database." << endl;
 		return true;
+	}
 
 	/* try to load the database file */
-	if(!load())
+	if(!load()) {
+		cout << "Failed to load database file \'" << file_ << "\'." << endl;
 		return false;
+	}
 
 	/* the database has been loaded */
+	cout << "Loaded database file \'" << file_ << "\'." << endl;
 	return true;
 }
 
@@ -83,7 +89,7 @@ bool Database::save() const {
     /* open the file */
 	ofstream file(file_);
 	if (!file.is_open()) {
-		cout << "Le fichier n'a pas pu être ouvert." << endl;
+		cout << "The file couldn't be opened." << endl;
 		return false;
 	}
 
@@ -189,17 +195,6 @@ bool fileExists(const string& path) {
 #endif
 #ifdef __WIN32__
 bool fileExists(const string& path) {
-	/* get attributes of the file */
-	DWORD attrib = GetFileAttributesW(widen(path).c_str());
-
-	/* test file attributes */
-	if (attrib == INVALID_FILE_ATTRIBUTES)
-		return false;
-
-	/* test directory attributes */
-	if (!(attrib & FILE_ATTRIBUTE_DIRECTORY))
-		return false;
-
-	return true;
+	return PathFileExists(path.c_str());
 }
 #endif

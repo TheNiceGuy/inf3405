@@ -16,6 +16,13 @@
 #include <iostream>
 #include <string>
 
+#ifdef __LINUX__
+	#define EXIT(STATUS) {return (STATUS);}
+#endif
+#ifdef __WIN32__
+	#define EXIT(STATUS) {system("pause"); return (STATUS);}
+#endif
+
 using namespace std;
 
 /** The name of the executable. */
@@ -33,7 +40,7 @@ static const char* user = nullptr;
 /** The password used for authentification. */
 static const char* pass = nullptr;
 
-/** Whether to prompt the user for interactive configuration. */
+/** Whether to prompt the user for the settings. */
 static bool prompt = true;
 
 /** Whether the user wants to see the help message. */
@@ -111,8 +118,27 @@ char** parseLongCommands(char** cmds, char** last) {
     return cmds;
 }
 
-void promptConfiguration() {
-    /* TODO: implement this */
+string strAddr;
+string strPort;
+string strUser;
+string strPass;
+void promptSettings() {
+	cout << "Configuring the server... (empty means default)" << endl;
+	cout << "\tPlease enter the server address: ";
+	getline(cin, strAddr);
+	if (!strAddr.empty()) addr = strAddr.c_str();
+
+	cout << "\tPlease enter the server port: ";
+	getline(cin, strPort);
+	if (!strPort.empty()) port = strPort.c_str();
+
+	cout << "\tPlease enter the username: ";
+	getline(cin, strUser);
+	if (!strUser.empty()) user = strUser.c_str();
+
+	cout << "\tPlease enter the password: ";
+	getline(cin, strPass);
+	if (!strPass.empty()) pass = strPass.c_str();
 }
 
 int main(int argc, char** argv) {
@@ -141,15 +167,16 @@ int main(int argc, char** argv) {
     /* show help if specified */
     if(showhelp) {
         showHelp();
-        return 1;
+        EXIT(1);
     }
 
     /* check if the parsing failed */
     if(fail)
-        return 1;
+		EXIT(1);
 
+	/* prompt for the client's settings */
     if(prompt)
-        promptConfiguration();
+		promptSettings();
 
     /* check if a listening address was specified */
     if(addr == nullptr) {
@@ -196,7 +223,7 @@ int main(int argc, char** argv) {
         fport = stou(port);
     } catch(const exception& ex) {
         cout << "Error: the specified port isn't valid" << endl;
-        return 1;
+		EXIT(1);
     }
 
 #ifdef __WIN32__
@@ -231,9 +258,5 @@ int main(int argc, char** argv) {
 	WSACleanup();
 #endif
 
-#ifdef __WIN32__
-	system("pause");
-#endif
-
-    return 0;
+	EXIT(0);
 }

@@ -3,6 +3,8 @@
 
 #include <string>
 
+#define __DEBUG__
+
 #ifdef __LINUX__
     #define INVALID_SOCKET -1
     #define SOCKET_ERROR   -1

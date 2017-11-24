@@ -31,10 +31,10 @@ Client::Client(Server* server, socket_t socket) :
 
     /* get the client's IP address */
     socklen_t len = sizeof(addr_);
-    if(getpeername(socket_, &addr_, &len) < 0)
-        cout << "getpeername() failed: error" << errno << endl;
+	if (getpeername(socket_, &addr_, &len) < 0)
 
-    /* create the thread */
+	/* create the thread */
+	cout << "starting client thread" << endl;
     thread_ = thread(threadEntryPoint, this);
 }
 
@@ -52,6 +52,7 @@ void Client::handleClient() {
     }
 
     server_->getBacklog(this);
+	sendQueuedMessages();
 
     /* set the recv() timeout of the socket */
 #ifdef __LINUX__
@@ -67,7 +68,7 @@ void Client::handleClient() {
     /* configure the polling structure */
     struct pollfd pollsocket;
     pollsocket.fd = socket_;
-    pollsocket.events = POLLIN;
+    pollsocket.events = POLLRDNORM;
 
     /* wait for messages */
     while(true) {
@@ -76,11 +77,12 @@ void Client::handleClient() {
         int ret = poll(&pollsocket, 1, 2000);
 #endif
 #ifdef __WIN32__
-		int ret = WSAPoll(&pollsocket, 1, 1);
+		int ret = WSAPoll(&pollsocket, 1, 2000);
 #endif
 
         /* send queued messages if possible */
-        sendQueuedMessages();
+		if(!sendQueuedMessages())
+			break;
 
         /* no data is ready to read */
         if(ret < 0)
@@ -88,6 +90,7 @@ void Client::handleClient() {
 
         waitMessage();
 
+	    /* check if the other end is still connected */
         char temp;
         ssize_t isconnected = recv(socket_, &temp, 1, MSG_PEEK);
         if(isconnected == 0) {
@@ -97,6 +100,7 @@ void Client::handleClient() {
     }
 
     /* remove the client from the server */
+	server_->unregister(this);
     auth_ = false;
 }
 
@@ -120,7 +124,7 @@ bool Client::sendMessage(const SerializableObject& obj) {
     return true;
 }
 
-void Client::sendQueuedMessages() {
+bool Client::sendQueuedMessages() {
     while(!queue_.empty()) {
         /* get the next messages */
         mutex_.lock();
@@ -133,8 +137,11 @@ void Client::sendQueuedMessages() {
             continue;
 
         /* send the message */
-        sendMessage(*msg);
+        if(!sendMessage(*msg))
+			return false;
     }
+
+	return true;
 }
 
 void Client::queue(MessageServerText* msg) {
