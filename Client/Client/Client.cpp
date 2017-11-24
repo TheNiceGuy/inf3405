@@ -16,6 +16,8 @@
     #include <time.h>
 #endif
 #ifdef __WIN32__
+	#include <winsock2.h>
+	#include <ws2tcpip.h>
 #endif
 #include <csignal>
 #include <iostream>
@@ -23,17 +25,6 @@
 #include <chrono>
 
 using namespace std;
-
-/** This is the entry point of the second thread. */
-#ifdef __LINUX__
-void* threadEntryPoint(void* data);
-#endif
-#ifdef __WIN32__
-DWORD WINAPI threadEntryPoint(LPVOID data);
-#endif
-
-/** This method reads a message from the user. */
-string getText();
 
 Client::Client(const string& addr, uint_t port) {
     /* make sure the port is valid */
@@ -46,9 +37,16 @@ Client::Client(const string& addr, uint_t port) {
     service.sin_port = htons(port);
     
     /* convert the string address into the structure */
+#ifdef __LINUX__
     int result = inet_pton(AF_INET, addr.c_str(), &service.sin_addr);
     if(result == 0)
         throw invalid_argument("the specified address isn't valid");
+#endif
+#ifdef __WIN32__
+	int result = InetPton(AF_INET, (PCTSTR) addr.c_str(), (PVOID) &service.sin_addr);
+	if (result == 0)
+		throw invalid_argument("the specified address isn't valid");
+#endif
 
     /* create the socket that connects to the server */
     socket_ = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -64,7 +62,12 @@ Client::Client(const string& addr, uint_t port) {
     /* connect to the server */
     result = connect(socket_, (struct sockaddr*) &service, sizeof(service));
     if(result < 0) {
+#ifdef __LINUX__
         close(socket_);
+#endif
+#ifdef __WIN32__
+		closesocket(socket_);
+#endif
         throw runtime_error("connect() failed: error " + to_string(errno));
     }
 
@@ -74,7 +77,12 @@ Client::Client(const string& addr, uint_t port) {
 
 Client::~Client() {
     /* close the socket */
+#ifdef __LINUX__
     close(socket_);
+#endif
+#ifdef __WIN32__
+	closesocket(socket_);
+#endif
 }
 
 void Client::checkInput() {
@@ -84,10 +92,12 @@ void Client::checkInput() {
     mutex mut;
     unique_lock<mutex> lock(mut);
 
+#ifdef __LINUX__
     /* configure the polling structure */
     struct pollfd pollstdin;
     pollstdin.fd     = STDIN_FILENO;
     pollstdin.events = POLLIN;
+#endif
 
     while(running_) {
         /* wait for the main thread to process the input */
@@ -100,11 +110,20 @@ void Client::checkInput() {
             locked = true;
 
         /* wait for a keystroke */
+#ifdef __LINUX__
         while(true) {
             int result = poll(&pollstdin, 1, 1);
             if(result > 0) break;
             if(!running_) return;
         }
+#endif
+#ifdef __WIN32__
+		while(true) {
+			if(exKbHit())
+				break;
+			this_thread::sleep_for(chrono::milliseconds(100));
+		}
+#endif
 
         /* lock the mutex for the type variable */
         mutexType_.lock();
@@ -128,7 +147,7 @@ void Client::checkSocket() {
     /* configure the polling structure */
     struct pollfd pollsocket;
     pollsocket.fd     = socket_;
-    pollsocket.events = POLLIN;
+    pollsocket.events = POLLPRI;
 
     while(running_) {
         /* wait for the main thread to process the data */
@@ -142,7 +161,12 @@ void Client::checkSocket() {
 
         /* wait for data into the socket */
         while(true) {
+#ifdef __LINUX__
             int result = poll(&pollsocket, 1, 1);
+#endif
+#ifdef __WIN32__
+			int result = WSAPoll(&pollsocket, 1, 1);
+#endif
             if(result > 0) break;
             if(!running_) return;
         }
@@ -210,10 +234,12 @@ void Client::mainLoop(const string& user, const string& pass) {
     struct timeval tv;
     tv.tv_sec  = 0;
     tv.tv_usec = 10;
-    setsockopt(socket_, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+    
 #endif
 #ifdef __WIN32__
+	DWORD tv = 10;
 #endif
+	setsockopt(socket_, SOL_SOCKET, SO_RCVTIMEO, (char*) &tv, sizeof(tv));
 
     /* start the threads */
     running_ = true;

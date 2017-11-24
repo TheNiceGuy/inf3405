@@ -18,6 +18,8 @@
 #endif
 
 #ifdef __WIN32__
+	#define WIN32_LEAN_AND_MEAN
+
 	typedef long long unsigned int socket_t;
     typedef unsigned long tid_t;
     typedef long long int ssize_t;
@@ -45,6 +47,10 @@ uint_t stou(const std::string& str, size_t* idx = 0, int base = 10);
 
 #ifdef __WIN32__
 std::wstring widen(const std::string& input);
+#endif
+
+#ifdef __WIN32__
+bool exKbHit();
 #endif
 
 #endif

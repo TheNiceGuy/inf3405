@@ -6,6 +6,12 @@
     #include <unistd.h>
 #endif
 #ifdef __WIN32__
+	#include <windows.h>
+	#include <lmcons.h>
+	#include <winsock2.h>
+
+	#pragma comment(lib, "Lib/PDCurses/pdcurses.lib")
+	#pragma comment(lib, "ws2_32.lib")
 #endif
 #include <iostream>
 #include <string>
@@ -160,7 +166,15 @@ int main(int argc, char** argv) {
     /* check if a username was specified */
     if(user == nullptr) {
         cout << "Using system's username." << endl;
+#ifdef __LINUX__
         user = getlogin();
+#endif
+#ifdef __WIN32__
+		char usernamebuf[100];
+		DWORD usernamelen = 100;
+		GetUserName(usernamebuf, &usernamelen);
+		user = usernamebuf;
+#endif
     }
 
     /* check if a password was specified */
@@ -185,14 +199,18 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+#ifdef __WIN32__
+	/* start the networking system */
+	WSADATA wsadata;
+	WSAStartup(MAKEWORD(2, 2), &wsadata);
+#endif
+
     Client* client = nullptr;
     try {
         client = new Client(string(addr), fport);
     } catch(const exception& ex) {
         cout << ex.what() << endl;
     }
-
-
 
     if(client != nullptr) {
         /* initialise the window */
@@ -207,6 +225,15 @@ int main(int argc, char** argv) {
         /* free the memory */
         delete client;
     }
+
+#ifdef __WIN32__
+	/* stop the networking system */
+	WSACleanup();
+#endif
+
+#ifdef __WIN32__
+	system("pause");
+#endif
 
     return 0;
 }

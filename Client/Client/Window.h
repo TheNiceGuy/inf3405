@@ -7,6 +7,7 @@
     #include <ncurses.h>
 #endif
 #ifdef __WIN32__
+	#include "lib/PDCurses/curses.h"
 #endif
 #include <thread>
 #include <mutex>

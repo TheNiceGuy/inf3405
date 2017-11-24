@@ -7,6 +7,7 @@
 #endif
 #ifdef __WIN32__
     #include <ws2tcpip.h>
+	#include <conio.h>
 #endif
 
 using namespace std;
@@ -51,7 +52,7 @@ uint_t stou(const string& str, size_t* idx, int base) {
     unsigned long result = std::stoul(str, idx, base);
 
     /* make sure it is positive */
-    if (result > numeric_limits<unsigned>::max())
+    if (result > (numeric_limits<unsigned>::max)())
         throw out_of_range("stou");
 
     return result;
@@ -73,5 +74,11 @@ wstring widen(const string& input) {
     MultiByteToWideChar(CP_UTF8, 0, input.c_str(), (int) input.length(), &ret[0], (int) ret.length());
 
     return ret;
+}
+#endif
+
+#ifdef __WIN32__
+bool exKbHit() {
+	return _kbhit();
 }
 #endif
