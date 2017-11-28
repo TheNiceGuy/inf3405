@@ -14,6 +14,10 @@
 
 	#pragma comment(lib, "Lib/PDCurses/pdcurses.lib")
 	#pragma comment(lib, "ws2_32.lib")
+
+	/*************************************************************
+	 * ATTENTION: UTILISEZ LE BUILD DEBUG X86 SOUS VISUAL STUDIO *
+	 *************************************************************/
 #endif
 #include <iostream>
 #include <string>
